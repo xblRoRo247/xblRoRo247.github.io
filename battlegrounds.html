@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battlegrounds: Spawner Fixed</title>
+    <style>
+        /* --- VISUAL STYLE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { 
+            background: #111; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            background: #000;
+        }
+
+        /* HUD */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .hud-top { display: flex; justify-content: space-between; padding: 30px; align-items: flex-start; }
+        .health-box { width: 350px; text-align: left; }
+        .health-box.enemy { text-align: right; }
+
+        .bar-container {
+            height: 30px; background: rgba(0,0,0,0.8); border: 2px solid #555;
+            transform: skewX(-15deg); overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .bar-fill { height: 100%; transition: width 0.2s ease-out; }
+
+        .scoreboard {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #444;
+            padding: 10px 30px;
+            border-radius: 0 0 15px 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .score-p1 { color: #00e0ff; }
+        .score-p2 { color: #ff4757; }
+
+        /* EDITOR HUD */
+        #editor-hud {
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            text-align: center; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .editor-msg {
+            background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 20px;
+            border: 1px solid #444; color: #fff; display: inline-block;
+        }
+        .brush-indicator {
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 2px solid white;
+            font-weight: bold; font-size: 20px; color: white;
+            min-width: 300px;
+        }
+        
+        /* MENU */
+        #menu-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10;
+        }
+
+        .panel {
+            background: #1e272e; border: 1px solid #485460;
+            padding: 30px; border-radius: 12px;
+            box-shadow: 0 0 50px black; text-align: center;
+            width: 850px;
+            max-height: 90vh; overflow-y: auto;
+            position: relative;
+        }
+
+        h1 { font-size: 50px; margin-bottom: 20px; font-style: italic; color: #00e0ff; text-shadow: 0 0 10px rgba(0, 224, 255, 0.5); }
+        h2 { margin-bottom: 10px; color: #fff; border-bottom: 1px solid #555; padding-bottom: 5px; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button {
+            flex: 1; padding: 15px; font-size: 16px; font-weight: bold;
+            border: none; border-radius: 4px; cursor: pointer; transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-p1 { background: #00d2d3; color: black; }
+        .btn-p1:hover { background: #00e0ff; transform: scale(1.02); }
+        
+        .btn-p2 { background: #ff4757; color: white; }
+        .btn-p2:hover { background: #ff6b81; transform: scale(1.02); }
+        
+        .btn-edit { background: #576574; color: white; width: 100%; margin-top: 10px;}
+        .btn-edit:hover { background: #8395a7; }
+
+        .btn-map { background: #6c5ce7; color: white; width: 100%; margin-top: 10px;}
+        .btn-map:hover { background: #8e44ad; }
+
+        .btn-bg { background: #fdcb6e; color: black; width: 100%; margin-top: 10px; border: 1px dashed #d35400; }
+        .btn-bg:hover { background: #ffeaa7; }
+
+        .btn-download { background: #2f3640; color: #7f8fa6; border: 1px dashed #7f8fa6; font-size: 14px; padding: 10px; width: 100%; margin-top: 20px;}
+
+        /* ADMIN */
+        .secret-lock {
+            position: absolute; top: 20px; right: 20px; font-size: 30px;
+            cursor: pointer; transition: transform 0.3s; filter: grayscale(100%);
+        }
+        .secret-lock:hover { transform: scale(1.2) rotate(10deg); filter: grayscale(0%); }
+
+        #admin-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #000; border: 2px solid gold; padding: 40px; z-index: 100;
+            box-shadow: 0 0 100px gold; text-align: center; width: 500px;
+        }
+        .admin-input { padding: 10px; font-size: 20px; text-align: center; width: 100%; margin-bottom: 10px; background: #222; color: gold; border: 1px solid gold; }
+        
+        .cheat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .cheat-btn { background: #222; color: gold; border: 1px solid #444; padding: 15px; font-size: 12px; cursor: pointer; }
+        .cheat-btn.active { background: gold; color: black; border-color: white; box-shadow: 0 0 15px gold; }
+        .cheat-btn:hover { background: #333; }
+
+        .god-btn { background: gold; color: black; margin-top: 10px; display: block; width: 100%; }
+
+        /* EDITOR COLUMNS */
+        .editor-container { display: flex; gap: 40px; text-align: left; }
+        .editor-col { flex: 1; background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        
+        .slider-row { margin: 15px 0; }
+        label { display: flex; justify-content: space-between; color: #ccc; margin-bottom: 5px; font-size: 14px;}
+        input[type="range"] { width: 100%; cursor: pointer; }
+        
+        .hidden { display: none !important; }
+        .win-txt { font-size: 80px; font-weight: 900; text-shadow: 0 0 30px black; position: absolute; top: 40%; width: 100%; text-align: center; }
+        
+        /* HIDDEN INPUTS */
+        #file-input, #bg-upload { display: none; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer" class="hidden">
+        <div class="hud-top">
+            <div class="health-box">
+                <h2 style="color:#00e0ff; border:none;">PLAYER 1 <span id="p1-god-tag" class="hidden" style="color:gold; font-size:12px">★ GOD MODE</span></h2>
+                <div class="bar-container"><div id="p1-bar" class="bar-fill" style="width:100%; background:#00e0ff;"></div></div>
+            </div>
+            
+            <div class="scoreboard">
+                <div class="score-p1">P1: <span id="score-p1-txt">0</span></div>
+                <div style="color:#555">|</div>
+                <div class="score-p2">P2: <span id="score-p2-txt">0</span></div>
+            </div>
+
+            <div class="health-box enemy">
+                <h2 style="color:#ff4757; border:none;"><span id="p2-god-tag" class="hidden" style="color:gold; font-size:12px">GOD MODE ★</span> <span id="p2-name">CPU</span></h2>
+                <div class="bar-container"><div id="p2-bar" class="bar-fill" style="width:100%; background:#ff4757;"></div></div>
+            </div>
+        </div>
+        <div id="result-msg" class="win-txt hidden">VICTORY</div>
+    </div>
+
+    <div id="editor-hud" class="hidden">
+        <div id="brush-display" class="brush-indicator" style="border-color: #555;">CURRENT: NORMAL</div>
+        <div class="editor-msg">
+            KEYS <b>1-9, 0, -, =</b>: Change Block &nbsp;|&nbsp; 🖱 CLICK: <b>Place/Remove</b> &nbsp;|&nbsp; ⌨ ESC: <b>Save</b>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <h2 style="color:gold; border-color: gold;">🔒 ADMIN ACCESS</h2>
+        <div id="login-screen">
+            <p style="margin-bottom:10px; color:#aaa;">Enter Password</p>
+            <input type="password" id="admin-code" class="admin-input" placeholder="******">
+            <button class="god-btn" onclick="checkCode()">UNLOCK</button>
+            <button onclick="closeAdmin()" style="background:#333; color:white; margin-top:5px; padding:5px;">CANCEL</button>
+        </div>
+        <div id="admin-controls" class="hidden">
+            <p style="color:#aaa; font-size:12px; margin-bottom:5px;">TOGGLE CHEATS</p>
+            <div class="cheat-grid">
+                <button id="btn-god1" class="cheat-btn" onclick="toggleCheat('god1')">🛡️ P1 God Mode</button>
+                <button id="btn-god2" class="cheat-btn" onclick="toggleCheat('god2')">🛡️ P2 God Mode</button>
+                <button id="btn-grav" class="cheat-btn" onclick="toggleCheat('grav')">🌑 Moon Gravity</button>
+                <button id="btn-spd" class="cheat-btn" onclick="toggleCheat('spd')">⚡ Super Speed</button>
+                <button id="btn-dbl" class="cheat-btn" onclick="toggleCheat('dbl')">☁️ Double Jump</button>
+                <button id="btn-rap" class="cheat-btn" onclick="toggleCheat('rap')">🔥 Rapid Fire</button>
+                <button id="btn-kill" class="cheat-btn" onclick="toggleCheat('kill')">💀 One Hit Kill</button>
+            </div>
+            <button class="cheat-btn" style="width:100%; margin-top:10px; background:#00d2d3; color:black;" onclick="healAll()">❤️ HEAL EVERYONE</button>
+            <button onclick="closeAdmin()" style="background:#333; color:white; margin-top:15px; padding:10px; width:100%;">EXIT ADMIN</button>
+        </div>
+    </div>
+
+    <div id="menu-layer">
+        <div id="main-menu" class="panel" style="width: 500px;">
+            <div class="secret-lock" onclick="openAdmin()">🔐</div>
+            <h1>BATTLEGROUNDS</h1>
+            <div style="background:#222; padding:10px; border-radius:5px; margin-bottom:15px; font-size:14px; color:#ccc;">
+                <strong>CONTROLS:</strong><br>Move: Arrow Keys | Attack: Space Bar
+            </div>
+            <div class="btn-group">
+                <button class="btn-p1" onclick="startGame('CPU')">👤 vs 🤖<br>1 PLAYER</button>
+                <button class="btn-p2" onclick="startGame('PVP')">👤 vs 👤<br>2 PLAYERS</button>
+            </div>
+            <button class="btn-map" onclick="startMapMaker()">🔨 MAP MAKER MODE</button>
+            <button class="btn-bg" onclick="document.getElementById('bg-upload').click()">🖼️ UPLOAD BACKGROUND PIC</button>
+            <input type="file" id="bg-upload" accept="image/*" onchange="uploadBackground(this)">
+            <button class="btn-edit" onclick="showEditor()">🛠 EDIT CHARACTERS</button>
+            <button class="btn-download" onclick="downloadGame()">⬇ DOWNLOAD FULL GAME FILE</button>
+        </div>
+
+        <div id="editor-menu" class="panel hidden">
+            <h1>CUSTOMIZER</h1>
+            <div class="editor-container">
+                <div class="editor-col">
+                    <h2 style="color:#00e0ff; text-align: center;">PLAYER 1</h2>
+                    <div class="slider-row"><label>Color <input type="color" id="p1-color" value="#00e0ff"></label></div>
+                    <div class="slider-row"><label>Damage</label><input type="range" id="p1-dmg" min="5" max="40" value="10"></div>
+                    <div class="slider-row"><label>Range</label><input type="range" id="p1-range" min="40" max="200" value="70"></div>
+                    <div class="slider-row"><label>Knockback</label><input type="range" id="p1-kb" min="10" max="60" value="25"></div>
+                </div>
+                <div class="editor-col">
+                    <h2 style="color:#ff4757; text-align: center;">OPPONENT</h2>
+                    <div class="slider-row"><label>Color <input type="color" id="p2-color" value="#ff4757"></label></div>
+                    <div class="slider-row"><label>Damage</label><input type="range" id="p2-dmg" min="5" max="40" value="10"></div>
+                    <div class="slider-row"><label>Range</label><input type="range" id="p2-range" min="40" max="200" value="70"></div>
+                    <div class="slider-row"><label>Knockback</label><input type="range" id="p2-kb" min="10" max="60" value="25"></div>
+                </div>
+            </div>
+            <button class="btn-edit" onclick="saveStats()">💾 SAVE TO BROWSER & RETURN</button>
+            <div class="data-btn-group">
+                <button class="btn-export" onclick="exportData()">⬇ EXPORT CONFIG FILE</button>
+                <button class="btn-import" onclick="document.getElementById('file-input').click()">⬆ IMPORT CONFIG FILE</button>
+                <input type="file" id="file-input" accept=".json" onchange="importData(this)">
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- VARIABLES ---
+    let mode = 'CPU';
+    let state = 'MENU'; 
+    let keys = {};
+    let particles = [];
+    let entities = [];
+    let shake = 0;
+    
+    let blockSize = 50;
+    let platforms = []; 
+    let currentBlockType = 0;
+    const blockColors = ['#555', '#e74c3c', '#74b9ff', '#2ecc71', '#fd79a8', '#d35400', '#6c5ce7', '#f1c40f', '#e67e22', '#0984e3', '#c0392b', '#dfe6e9'];
+    const blockNames = ['NORMAL', '🔥 LAVA', '❄️ ICE', '🟢 BOUNCE', '💖 HEAL', '🧱 BREAK', '🐌 MUD', '⚡ SPEED', '🟠 PORTAL A', '🔵 PORTAL B', '🧟 ENEMY SPAWN', '🤖 ALLY SPAWN'];
+
+    let bgImage = null; 
+    let stars = []; 
+    let winsP1 = 0;
+    let winsP2 = 0;
+
+    let cheatGravity = 1.0; 
+    let cheatSpeed = 1.0; 
+    let cheatDoubleJump = false;
+    let cheatRapidFire = false;
+    let cheatOneHit = false;
+
+    let stats1 = { color: '#00e0ff', dmg: 10, range: 70, kb: 25 };
+    let stats2 = { color: '#ff4757', dmg: 10, range: 70, kb: 25 };
+
+    let p1 = { x: 200, y: 0, w: 50, h: 80, vx: 0, vy: 0, hp: 100, maxHp: 100, facing: 1, cooldown: 0, atkTimer: 0, god: false, jumpCount: 0, tpCooldown: 0 };
+    let p2 = { x: 800, y: 0, w: 50, h: 80, vx: 0, vy: 0, hp: 100, maxHp: 100, facing: -1, cooldown: 0, atkTimer: 0, god: false, jumpCount: 0, tpCooldown: 0 };
+
+    let mouseX = 0, mouseY = 0;
+
+    // --- INIT ---
+    function init() {
+        for(let i=0; i<100; i++) stars.push({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, s: Math.random()*2});
+        loadGame(); resize(); requestAnimationFrame(update);
+    }
+
+    function uploadBackground(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() { bgImage = img; alert("Background Set!"); };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // --- DATA ---
+    function loadGame() {
+        const savedData = localStorage.getItem('battle_stats_v8');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            stats1 = data.s1; stats2 = data.s2;
+            if(data.map) platforms = data.map;
+            if(data.w1) winsP1 = data.w1; if(data.w2) winsP2 = data.w2;
+            updateInputs(); 
+        }
+    }
+    function saveStats() {
+        stats1.color = document.getElementById('p1-color').value;
+        stats1.dmg = parseInt(document.getElementById('p1-dmg').value);
+        stats1.range = parseInt(document.getElementById('p1-range').value);
+        stats1.kb = parseInt(document.getElementById('p1-kb').value);
+        stats2.color = document.getElementById('p2-color').value;
+        stats2.dmg = parseInt(document.getElementById('p2-dmg').value);
+        stats2.range = parseInt(document.getElementById('p2-range').value);
+        stats2.kb = parseInt(document.getElementById('p2-kb').value);
+        const data = { s1: stats1, s2: stats2, map: platforms, w1: winsP1, w2: winsP2 };
+        localStorage.setItem('battle_stats_v8', JSON.stringify(data));
+        document.getElementById('editor-menu').classList.add('hidden');
+        document.getElementById('main-menu').classList.remove('hidden');
+    }
+    function exportData() {
+        const data = { s1: stats1, s2: stats2, map: platforms };
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "battle_config.json";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    function importData(input) {
+        const file = input.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if(data.s1 && data.s2) {
+                    stats1 = data.s1; stats2 = data.s2;
+                    if(data.map) platforms = data.map;
+                    updateInputs(); saveStats(); alert("Data Imported Successfully!");
+                } else { alert("Invalid config file!"); }
+            } catch(err) { alert("Error reading file."); }
+        };
+        reader.readAsText(file);
+    }
+    function updateInputs() {
+        document.getElementById('p1-color').value = stats1.color; document.getElementById('p1-dmg').value = stats1.dmg;
+        document.getElementById('p1-range').value = stats1.range; document.getElementById('p1-kb').value = stats1.kb;
+        document.getElementById('p2-color').value = stats2.color; document.getElementById('p2-dmg').value = stats2.dmg;
+        document.getElementById('p2-range').value = stats2.range; document.getElementById('p2-kb').value = stats2.kb;
+    }
+
+    // --- ADMIN ---
+    function openAdmin() { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('login-screen').classList.remove('hidden'); document.getElementById('admin-controls').classList.add('hidden'); document.getElementById('admin-code').value = ''; document.getElementById('admin-code').focus(); }
+    function closeAdmin() { document.getElementById('admin-panel').classList.add('hidden'); }
+    function checkCode() {
+        if (document.getElementById('admin-code').value === "100655") {
+            document.getElementById('login-screen').classList.add('hidden'); document.getElementById('admin-controls').classList.remove('hidden'); updateCheatUI();
+        } else { alert("ACCESS DENIED"); }
+    }
+    function toggleCheat(type) {
+        if (type === 'god1') p1.god = !p1.god; if (type === 'god2') p2.god = !p2.god;
+        if (type === 'grav') cheatGravity = (cheatGravity === 1.0) ? 0.3 : 1.0;
+        if (type === 'spd') cheatSpeed = (cheatSpeed === 1.0) ? 2.5 : 1.0;
+        if (type === 'dbl') cheatDoubleJump = !cheatDoubleJump;
+        if (type === 'rap') cheatRapidFire = !cheatRapidFire;
+        if (type === 'kill') cheatOneHit = !cheatOneHit;
+        updateCheatUI();
+    }
+    function healAll() { p1.hp = p1.maxHp; p2.hp = p2.maxHp; alert("HEALED!"); }
+    function updateCheatUI() {
+        document.getElementById('btn-god1').classList.toggle('active', p1.god); document.getElementById('btn-god2').classList.toggle('active', p2.god);
+        document.getElementById('btn-grav').classList.toggle('active', cheatGravity < 1.0); document.getElementById('btn-spd').classList.toggle('active', cheatSpeed > 1.0);
+        document.getElementById('btn-dbl').classList.toggle('active', cheatDoubleJump); document.getElementById('btn-rap').classList.toggle('active', cheatRapidFire);
+        document.getElementById('btn-kill').classList.toggle('active', cheatOneHit);
+        document.getElementById('p1-god-tag').classList.toggle('hidden', !p1.god); document.getElementById('p2-god-tag').classList.toggle('hidden', !p2.god);
+    }
+
+    // --- GAME LOOP ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let floorY = 0; let gravity = 0.9;
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; floorY = canvas.height - 100; }
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', e => { let rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; });
+    
+    window.addEventListener('mousedown', e => {
+        if (state === 'MAP_EDITOR') {
+            let gx = Math.floor(mouseX / blockSize) * blockSize; let gy = Math.floor(mouseY / blockSize) * blockSize;
+            let index = platforms.findIndex(b => b.x === gx && b.y === gy);
+            if (index !== -1) { platforms.splice(index, 1); } 
+            else { if (gy < floorY) platforms.push({x: gx, y: gy, w: blockSize, h: blockSize, type: currentBlockType}); }
+        }
+    });
+
+    window.addEventListener('keydown', e => {
+        if(e.key === " " && e.target == document.body) e.preventDefault();
+        if (state === 'MAP_EDITOR') {
+            if (e.key === "Escape") { saveStats(); state = 'MENU'; document.getElementById('menu-layer').classList.remove('hidden'); document.getElementById('editor-hud').classList.add('hidden'); return; }
+            if (['1','2','3','4','5','6','7','8','9'].includes(e.key)) { currentBlockType = parseInt(e.key) - 1; updateBrushUI(); }
+            if (e.key === '0') { currentBlockType = 9; updateBrushUI(); }
+            if (e.key === '-' || e.key === '_') { currentBlockType = 10; updateBrushUI(); }
+            if (e.key === '=' || e.key === '+') { currentBlockType = 11; updateBrushUI(); }
+        }
+        keys[e.key] = true;
+        if(state === 'GAME') {
+            let jumpForce = -20 * (cheatGravity < 1 ? 0.8 : 1.0);
+            if (e.key === 'ArrowUp') {
+                if(p1.onGround) { p1.vy = jumpForce; p1.onGround = false; p1.jumpCount = 1; }
+                else if(cheatDoubleJump && p1.jumpCount < 2) { p1.vy = jumpForce; p1.jumpCount++; }
+            }
+            if (mode === 'PVP' && e.key === 'w') {
+                if(p2.onGround) { p2.vy = jumpForce; p2.onGround = false; p2.jumpCount = 1; }
+                else if(cheatDoubleJump && p2.jumpCount < 2) { p2.vy = jumpForce; p2.jumpCount++; }
+            }
+        }
+    });
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    function updateBrushUI() { const el = document.getElementById('brush-display'); el.innerText = "CURRENT: " + blockNames[currentBlockType]; el.style.borderColor = blockColors[currentBlockType]; el.style.color = blockColors[currentBlockType]; }
+    function showEditor() { document.getElementById('main-menu').classList.add('hidden'); document.getElementById('editor-menu').classList.remove('hidden'); updateInputs(); }
+    function startMapMaker() { state = 'MAP_EDITOR'; resize(); document.getElementById('menu-layer').classList.add('hidden'); document.getElementById('editor-hud').classList.remove('hidden'); updateBrushUI(); }
+    
+    function startGame(selectedMode) {
+        mode = selectedMode; resize();
+        p1.hp = p1.maxHp; p1.x = 200; p1.vx = 0; p1.y = floorY - 80; p1.tpCooldown = 0;
+        p2.hp = p2.maxHp; p2.x = canvas.width - 200; p2.vx = 0; p2.y = floorY - 80; p2.tpCooldown = 0;
+        entities = [];
+        // Reset Spawners to fire immediately
+        for(let p of platforms) { if(p.type === 10 || p.type === 11) p.spawnTimer = 200; } 
+
+        document.getElementById('menu-layer').classList.add('hidden'); document.getElementById('ui-layer').classList.remove('hidden'); document.getElementById('result-msg').classList.add('hidden');
+        document.getElementById('p2-name').innerText = mode === 'CPU' ? "CPU OPPONENT" : "PLAYER 2";
+        document.getElementById('p1-bar').style.background = stats1.color; document.getElementById('p2-bar').style.background = stats2.color;
+        document.getElementById('score-p1-txt').innerText = winsP1; document.getElementById('score-p2-txt').innerText = winsP2;
+        updateCheatUI(); state = 'GAME';
+    }
+
+    function updateAI() {
+        let dist = p1.x - p2.x; let absDist = Math.abs(dist); let attackRange = stats2.range + 10; 
+        if (absDist > attackRange) { if (dist > 0) { p2.vx += 0.8 * cheatSpeed; p2.facing = 1; } else { p2.vx -= 0.8 * cheatSpeed; p2.facing = -1; } } else { p2.vx *= 0.5; }
+        if (absDist <= attackRange + 20 && p2.cooldown <= 0) { if(Math.random() < 0.08) attack(p2, p1, stats2); }
+        let jumpForce = -20 * (cheatGravity < 1 ? 0.6 : 1.0);
+        if (Math.random() < 0.02 && p2.y + p2.h >= floorY) { p2.vy = jumpForce; p2.jumpCount++; }
+        if (cheatDoubleJump && p2.jumpCount < 2 && p2.vy > 0 && Math.random() < 0.05) { p2.vy = jumpForce; p2.jumpCount++; }
+    }
+
+    function update() {
+        if (state === 'GAME') {
+            let moveSpeed = 1.5 * cheatSpeed;
+            if (keys['ArrowLeft']) { p1.vx -= moveSpeed; p1.facing = -1; } if (keys['ArrowRight']) { p1.vx += moveSpeed; p1.facing = 1; }
+            if (keys[' '] && p1.cooldown <= 0) { attack(p1, p2, stats1); }
+            if (mode === 'PVP') { if (keys['a']) { p2.vx -= moveSpeed; p2.facing = -1; } if (keys['d']) { p2.vx += moveSpeed; p2.facing = 1; } if (keys['f'] && p2.cooldown <= 0) { attack(p2, p1, stats2); } } else { updateAI(); }
+            physics(p1); physics(p2); updateEntities();
+            document.getElementById('p1-bar').style.width = (p1.hp / p1.maxHp * 100) + "%"; document.getElementById('p2-bar').style.width = (p2.hp / p2.maxHp * 100) + "%";
+            platforms = platforms.filter(p => !p.broken);
+        }
+        render(); requestAnimationFrame(update);
+    }
+
+    function spawnEntity(type, x, y) {
+        if(entities.length >= 10) return;
+        let ent = { x: x, y: y, w: 30, h: 50, vx: 0, vy: 0, hp: 30, maxHp: 30, type: type, color: type === 'enemy' ? '#c0392b' : '#fff', facing: 1, cooldown: 0, onGround: false, tpCooldown: 0 };
+        entities.push(ent); spawnParticles(x, y, ent.color);
+    }
+
+    function updateEntities() {
+        for(let p of platforms) {
+            if(p.type === 10 || p.type === 11) {
+                // Initialize timer if undefined
+                if(p.spawnTimer === undefined) p.spawnTimer = 299;
+                p.spawnTimer++;
+                if(p.spawnTimer > 300) { spawnEntity(p.type === 10 ? 'enemy' : 'ally', p.x + 10, p.y - 50); p.spawnTimer = 0; }
+            }
+        }
+        for (let i = entities.length - 1; i >= 0; i--) {
+            let e = entities[i]; physics(e);
+            let target = null;
+            if (e.type === 'enemy') { let d1 = Math.abs(e.x - p1.x); let d2 = Math.abs(e.x - p2.x); target = (d1 < d2) ? p1 : p2; } else { target = p2; }
+            if (target) {
+                if (target.x > e.x) { e.vx += 0.5; e.facing = 1; } else { e.vx -= 0.5; e.facing = -1; }
+                if (e.onGround && Math.random() < 0.05 && Math.abs(target.x - e.x) > 50) e.vy = -15;
+                let dist = Math.abs((e.x + e.w/2) - (target.x + target.w/2));
+                if (dist < 50 && e.cooldown <= 0) {
+                    if(!target.god) { target.hp -= 2; target.vx = 5 * e.facing; target.vy = -5; spawnParticles(target.x, target.y, target === p1 ? stats1.color : stats2.color); e.cooldown = 60; }
+                }
+            }
+            if(e.hp <= 0) { spawnParticles(e.x, e.y, e.color); entities.splice(i, 1); }
+        }
+    }
+
+    function physics(ent) {
+        let friction = 0.85; let onIce = false; let onMud = false;
+        ent.vy += gravity * cheatGravity; ent.x += ent.vx; ent.y += ent.vy; ent.onGround = false;
+        
+        for(let p of platforms) {
+            let type = p.type || 0; 
+            if (ent.x + ent.w > p.x && ent.x < p.x + p.w) {
+                if (ent.y + ent.h > p.y && ent.y < p.y + p.h) {
+                     if (type === 8 && ent.tpCooldown <= 0 && ent.hp) { let dest = platforms.find(b => b.type === 9); if(dest) { ent.x = dest.x; ent.y = dest.y - ent.h; ent.tpCooldown = 60; spawnParticles(ent.x, ent.y, "cyan"); } }
+                     else if (type === 9 && ent.tpCooldown <= 0 && ent.hp) { let dest = platforms.find(b => b.type === 8); if(dest) { ent.x = dest.x; ent.y = dest.y - ent.h; ent.tpCooldown = 60; spawnParticles(ent.x, ent.y, "orange"); } }
+                }
+                if (ent.vy >= 0 && ent.y + ent.h >= p.y && ent.y + ent.h <= p.y + p.h + 10 && (ent.y + ent.h - ent.vy) <= p.y + 10) {
+                    if (type === 8 || type === 9) continue;
+                    if (type === 3) { ent.vy = -25; ent.onGround = false; return; } 
+                    if (type === 2) onIce = true; 
+                    if (type === 1) { if(ent.god !== undefined && !ent.god) ent.hp -= 0.2; else if (ent.god === undefined) ent.hp -= 0.5; } 
+                    if (type === 4) { ent.hp += 0.2; if(ent.hp>ent.maxHp) ent.hp=ent.maxHp; } 
+                    if (type === 5) { p.decay = (p.decay || 0) + 1; if(p.decay > 30) p.broken = true; }
+                    if (type === 6) onMud = true; if (type === 7) ent.vx *= 1.2; 
+                    ent.y = p.y - ent.h; ent.vy = 0; ent.onGround = true; if(ent.jumpCount !== undefined) ent.jumpCount = 0;
+                }
+            }
+        }
+        if(onIce) friction = 0.98; if(onMud) friction = 0.5; ent.vx *= friction;
+        if (ent.y + ent.h > floorY) { ent.y = floorY - ent.h; ent.vy = 0; ent.onGround = true; if(ent.jumpCount !== undefined) ent.jumpCount = 0; }
+        if (ent.x < 0) ent.x = 0; if (ent.x > canvas.width - ent.w) ent.x = canvas.width - ent.w;
+        if (ent.cooldown > 0) ent.cooldown--; if (ent.atkTimer > 0) ent.atkTimer--; if (ent.tpCooldown > 0) ent.tpCooldown--;
+    }
+
+    function attack(atk, vic, s) {
+        atk.cooldown = cheatRapidFire ? 5 : 30; atk.atkTimer = 10; 
+        let dist = Math.abs((atk.x + atk.w/2) - (vic.x + vic.w/2)); let vDist = Math.abs((atk.y + atk.h/2) - (vic.y + vic.h/2));
+        let facingCheck = (atk.facing === 1 && vic.x > atk.x) || (atk.facing === -1 && vic.x < atk.x);
+        if (dist < s.range + 40 && vDist < 100 && facingCheck) {
+            if (vic.god) { ctx.fillStyle = "gold"; ctx.fillText("BLOCKED", vic.x, vic.y - 10); return; }
+            let dmg = cheatOneHit ? 100 : s.dmg; vic.hp -= dmg; vic.vx = s.kb * atk.facing; vic.vy = -10 * (cheatGravity < 1 ? 0.5 : 1.0); 
+            shake = dmg; spawnParticles(vic.x + vic.w/2, vic.y + vic.h/2, s.color);
+            if (vic.hp <= 0) { vic.hp = 0; if (atk === p1) winsP1++; else winsP2++; saveStats(); endGame(atk === p1 ? "PLAYER 1 WINS!" : (mode === 'PVP' ? "PLAYER 2 WINS!" : "CPU WINS!")); }
+        }
+        for(let e of entities) {
+            let eDist = Math.abs((atk.x + atk.w/2) - (e.x + e.w/2));
+            if (eDist < s.range + 40 && facingCheck) { e.hp -= s.dmg; e.vx = s.kb * atk.facing; e.vy = -5; spawnParticles(e.x, e.y, e.color); }
+        }
+    }
+
+    function spawnParticles(x, y, c) { for(let i=0; i<10; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 25, color: c }); }
+    function endGame(msg) {
+        state = 'OVER'; const el = document.getElementById('result-msg'); el.innerText = msg; el.style.color = msg.includes("1") ? stats1.color : stats2.color; el.classList.remove('hidden');
+        setTimeout(() => { document.getElementById('menu-layer').classList.remove('hidden'); document.getElementById('ui-layer').classList.add('hidden'); state = 'MENU'; }, 3000);
+    }
+
+    function render() {
+        if (bgImage) { ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height); ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0,0,canvas.width, canvas.height); } 
+        else { ctx.fillStyle = "#050505"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = "white"; for(let s of stars) { s.x += s.s * 0.1; if(s.x > canvas.width) s.x = 0; ctx.fillRect(s.x, s.y, s.s, s.s); } }
+        let sx = 0, sy = 0; if (shake > 0) { sx = (Math.random()-0.5)*shake; sy = (Math.random()-0.5)*shake; shake *= 0.9; }
+        ctx.save(); ctx.translate(sx, sy);
+        ctx.fillStyle = "#1e1e1e"; ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY); ctx.strokeStyle = "#333"; ctx.beginPath(); for(let i=0; i<canvas.width; i+=50) { ctx.moveTo(i, floorY); ctx.lineTo(i, canvas.height); } ctx.stroke();
+
+        if (state === 'MAP_EDITOR') {
+            ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); for(let i=0; i<canvas.width; i+=blockSize) { ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); } for(let i=0; i<canvas.height; i+=blockSize) { ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); } ctx.stroke();
+            let gx = Math.floor(mouseX / blockSize) * blockSize; let gy = Math.floor(mouseY / blockSize) * blockSize; ctx.fillStyle = blockColors[currentBlockType]; ctx.globalAlpha = 0.5; ctx.fillRect(gx, gy, blockSize, blockSize); ctx.globalAlpha = 1.0;
+        }
+
+        ctx.lineWidth = 2;
+        for(let p of platforms) { 
+            let type = p.type || 0; ctx.fillStyle = blockColors[type]; ctx.strokeStyle = "#000";
+            if (type === 2) ctx.fillStyle = "rgba(116, 185, 255, 0.8)"; 
+            if (type === 5) ctx.fillStyle = `rgba(211, 84, 0, ${1 - ((p.decay||0)/30)})`; 
+            if (type === 8) { ctx.fillStyle = "rgba(230, 126, 34,0.3)"; ctx.strokeStyle = "#e67e22"; ctx.lineWidth = 3; }
+            if (type === 9) { ctx.fillStyle = "rgba(9, 132, 227,0.3)"; ctx.strokeStyle = "#0984e3"; ctx.lineWidth = 3; }
+            if (type === 10) { ctx.fillStyle = "#c0392b"; ctx.fillText("E", p.x+15, p.y+30); }
+            if (type === 11) { ctx.fillStyle = "#dfe6e9"; ctx.fillText("A", p.x+15, p.y+30); }
+            ctx.fillRect(p.x, p.y, p.w, p.h); ctx.strokeRect(p.x, p.y, p.w, p.h); 
+            if(type === 8 || type === 9) { ctx.beginPath(); ctx.arc(p.x+p.w/2, p.y+p.h/2, 10, 0, Math.PI*2); ctx.stroke(); }
+        }
+
+        if (state === 'GAME' || state === 'OVER') {
+            for(let e of entities) { ctx.fillStyle = e.color; ctx.fillRect(e.x, e.y, e.w, e.h); ctx.fillStyle = "black"; let eyeX = e.facing === 1 ? e.x + 20 : e.x + 5; ctx.fillRect(eyeX, e.y + 10, 5, 5); }
+            ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(p1.x+5, p1.y+5, p1.w, p1.h); ctx.fillRect(p2.x+5, p2.y+5, p2.w, p2.h);
+            ctx.fillStyle = stats1.color; ctx.fillRect(p1.x, p1.y, p1.w, p1.h); if(p1.god) { ctx.strokeStyle="gold"; ctx.lineWidth=3; ctx.strokeRect(p1.x-5, p1.y-5, p1.w+10, p1.h+10); }
+            if (p1.atkTimer > 0) { ctx.globalAlpha = 0.5; ctx.fillStyle = stats1.color; let rx = p1.facing === 1 ? p1.x + p1.w : p1.x - stats1.range; ctx.fillRect(rx, p1.y + 10, stats1.range, 60); ctx.globalAlpha = 1.0; }
+            ctx.fillStyle = stats2.color; ctx.fillRect(p2.x, p2.y, p2.w, p2.h); if(p2.god) { ctx.strokeStyle="gold"; ctx.lineWidth=3; ctx.strokeRect(p2.x-5, p2.y-5, p2.w+10, p2.h+10); }
+            if (p2.atkTimer > 0) { ctx.globalAlpha = 0.5; ctx.fillStyle = "white"; let rx = p2.facing === 1 ? p2.x + p2.w : p2.x - stats2.range; ctx.fillRect(rx, p2.y + 10, stats2.range, 60); ctx.globalAlpha = 1.0; }
+            for(let p of particles) { p.x += p.vx; p.y += p.vy; p.life--; ctx.fillStyle = p.color; if(p.life > 0) ctx.fillRect(p.x, p.y, 4, 4); } particles = particles.filter(p => p.life > 0);
+        }
+        ctx.restore();
+    }
+
+    function downloadGame() {
+        const htmlContent = document.documentElement.outerHTML; const blob = new Blob([htmlContent], { type: 'text/html' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'battle_spawner_fixed.html'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    init();
+</script>
+</body>
+</html>
