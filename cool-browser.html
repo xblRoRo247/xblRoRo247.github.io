@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Gaming Hub & Stealth Portal</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --accent: #58a6ff;
+            --accent-hover: #1f6feb;
+            --green: #3fb950;
+            --danger: #f85149;
+            --gold: #d29922;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 950px;
+        }
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { margin: 0 0 8px 0; color: #fff; font-size: 2rem; }
+        header p { color: #8b949e; margin: 0; }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #fff;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .badge { background: rgba(88, 166, 255, 0.15); color: var(--accent); font-size: 11px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(88, 166, 255, 0.3); }
+        .badge.gold { background: rgba(210, 153, 34, 0.15); color: var(--gold); border-color: rgba(210, 153, 34, 0.3); }
+        input[type="text"] {
+            width: 100%; padding: 10px; background: #0d1117; border: 1px solid var(--border);
+            color: var(--text); border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn {
+            background-color: var(--accent-hover); color: white; border: none; padding: 10px 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-bottom: 10px;
+        }
+        .btn:hover { background-color: var(--accent); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 15px; }
+        .hub-btn {
+            background: #21262d; border: 1px solid var(--border); color: #fff; padding: 15px;
+            border-radius: 6px; cursor: pointer; text-align: center; font-size: 14px; font-weight: bold; transition: 0.2s;
+        }
+        .hub-btn:hover { background: #30363d; border-color: var(--accent); transform: translateY(-2px); }
+        .hub-btn.game { border-color: var(--green); }
+        .hub-btn.game:hover { background: #1a3422; border-color: var(--green); }
+        .game-viewport {
+            width: 100%; height: 450px; background: #161b22; border: 1px solid var(--border);
+            border-radius: 6px; margin-top: 15px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; position: relative; overflow: hidden;
+        }
+        iframe.sandbox { width: 100%; height: 100%; border: none; background: #fff; }
+        .instructions { background: #0d1117; padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent); font-size: 13px; color: #8b949e; margin-bottom: 15px; }
+        .instructions strong { color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ultimate Gaming & Stealth Hub</h1>
+            <p>Play auto-saving games, launch tabbed stealth browsers, or surf privately.</p>
+        </header>
+
+        <!-- Section 1: Stealth Browser Launcher -->
+        <div class="card">
+            <h2>
+                🚀 Stealth Chrome Cloaker
+                <span class="badge">v4.0 Chrome Tabs Built-in</span>
+            </h2>
+            
+            <div class="instructions">
+                <strong>🛡️ New Multi-Tab UI:</strong> The stealth window now looks and acts like Google Chrome. Open new tabs (+), switch pages, and browse normally!<br>
+                • Press <strong>Esc</strong> inside to show/hide the entire browser UI top bar.<br>
+                • Press <strong>` (Backtick)</strong> to Panic!
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="customTitle" placeholder="Outer Window Title (Defaults to 'My Drive')" style="margin-bottom: 0;">
+                <input type="text" id="customIcon" placeholder="Favicon URL (Optional)" style="margin-bottom: 0;">
+            </div>
+            <input type="text" id="customUrl" placeholder="Starting URL (e.g., https://example.com)...">
+            
+            <button class="btn" onclick="launchCustomStealth()">Launch Stealth Browser</button>
+            
+            <div class="grid">
+                <!-- Using embedded links to bypass iframe blocks -->
+                <div class="hub-btn" onclick="launchStealth('https://www.google.com/webhp?igu=1', 'Google')">Google</div>
+                <div class="hub-btn" onclick="launchStealth('https://www.bing.com', 'Search')">Bing</div>
+                <div class="hub-btn" onclick="launchStealth('https://en.wikipedia.org', 'Wikipedia')">Wikipedia</div>
+                <div class="hub-btn" onclick="launchStealth('https://duckduckgo.com', 'New Tab')">DuckDuckGo</div>
+            </div>
+        </div>
+
+        <!-- Section 2: Built-in Arcade Hub -->
+        <div class="card">
+            <h2>
+                🕹️ Arcade & Clicker Hub
+                <span class="badge gold">Auto-Save Enabled 💾</span>
+            </h2>
+            <p style="font-size: 13px; color: #8b949e;">Your high scores and cookie counts now automatically save using localStorage!</p>
+            
+            <div class="grid">
+                <div class="hub-btn game" onclick="loadGame('cookie')">🍪 Cookie Clicker</div>
+                <div class="hub-btn game" onclick="loadGame('snake')">🐍 Retro Snake</div>
+                <div class="hub-btn game" onclick="loadGame('flappy')">🐦 Flappy Block</div>
+                <div class="hub-btn game" onclick="loadGame('pong')">🏓 Classic Pong</div>
+            </div>
+
+            <div class="game-viewport" id="gameViewportContainer">
+                <p style="color: #8b949e;">Select a game above to start playing!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get custom inputs
+        function launchCustomStealth() {
+            const url = document.getElementById('customUrl').value || 'https://www.google.com/webhp?igu=1';
+            const title = document.getElementById('customTitle').value;
+            const icon = document.getElementById('customIcon').value;
+            launchStealth(url, title, icon);
+        }
+
+        // Stealth Chrome Launcher
+        function launchStealth(url, title, iconUrl) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+
+            const tabName = title && title.trim() !== '' ? title : 'My Drive - Google Drive';
+            const favicon = iconUrl && iconUrl.trim() !== '' ? iconUrl : 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png';
+
+            const stealthHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${tabName}</title>
+                    <link rel="icon" type="image/png" href="${favicon}">
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #202124; font-family: "Segoe UI", Roboto, sans-serif; }
+                        #browser { display: flex; flex-direction: column; height: 100%; }
+                        
+                        /* Chrome Tab Bar */
+                        #stealth-ui { background: #171717; display: flex; flex-direction: column; transition: 0.2s ease; }
+                        #stealth-ui.hidden { display: none; }
+                        
+                        #tabs-bar { display: flex; padding: 8px 8px 0 8px; align-items: flex-end; gap: 4px; background: #000; }
+                        .tab { 
+                            background: #202124; color: #9aa0a6; padding: 8px 12px; border-radius: 8px 8px 0 0; 
+                            font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; 
+                            width: 180px; justify-content: space-between; border-right: 1px solid #333;
+                        }
+                        .tab.active { background: #323639; color: #fff; border-right: none; }
+                        .tab-close { 
+                            color: #9aa0a6; border: none; background: transparent; cursor: pointer; 
+                            border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; 
+                            justify-content: center; font-size: 14px; padding: 0;
+                        }
+                        .tab-close:hover { background: #5f6368; color: #fff; }
+                        #new-tab { background: transparent; color: #9aa0a6; border: none; font-size: 20px; cursor: pointer; padding: 0 10px; margin-bottom: 5px; }
+                        #new-tab:hover { color: #fff; }
+                        
+                        /* Chrome Address Bar */
+                        #nav-bar { background: #323639; padding: 6px 12px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #000; }
+                        .nav-btn { background: transparent; color: #c9d1d9; border: none; font-size: 16px; cursor: pointer; border-radius: 4px; padding: 6px; font-weight: bold; }
+                        .nav-btn:hover { background: #444c56; }
+                        #url-bar { 
+                            flex-grow: 1; background: #202124; border: 1px solid #5f6368; color: #fff; 
+                            padding: 8px 16px; border-radius: 20px; font-size: 13px; outline: none; 
+                        }
+                        #url-bar:focus { border-color: #8ab4f8; background: #000; }
+                        .danger-btn { background: #da3633; color: white; border-radius: 16px; font-size: 12px; padding: 6px 14px; }
+                        
+                        /* Viewports */
+                        #viewports { flex-grow: 1; position: relative; background: #fff; }
+                        .viewport { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: #fff; }
+                        .viewport.active { display: block; }
+                    </style>
+                </head>
+                <body>
+                    <div id="browser">
+                        <!-- Chrome UI -->
+                        <div id="stealth-ui">
+                            <div id="tabs-bar">
+                                <div id="tabs-container" style="display:flex; gap:4px; overflow-x: auto;"></div>
+                                <button id="new-tab">+</button>
+                            </div>
+                            <div id="nav-bar">
+                                <button class="nav-btn" id="reload-btn" title="Reload">&#8635;</button>
+                                <input type="text" id="url-bar" placeholder="Type a URL or search..." />
+                                <button class="nav-btn" onclick="document.getElementById('stealth-ui').classList.add('hidden')" style="font-size: 12px; background:#444; border-radius:12px;">Hide (Esc)</button>
+                                <button class="nav-btn danger-btn" onclick="window.location.replace('https://drive.google.com')" title="Panic Button (\`)">Panic</button>
+                            </div>
+                        </div>
+                        <!-- Iframes go here -->
+                        <div id="viewports"></div>
+                    </div>
+
+                    <script>
+                        let tabCount = 0;
+                        let tabs = [];
+                        let activeTabId = null;
+
+                        // Create a new tab
+                        function createTab(targetUrl) {
+                            tabCount++;
+                            const id = 'tab-' + tabCount;
+                            
+                            // Generate Tab UI
+                            const tabEl = document.createElement('div');
+                            tabEl.className = 'tab';
+                            tabEl.id = id + '-el';
+                            tabEl.innerHTML = '<span class="title">Loading...</span><button class="tab-close">&times;</button>';
+                            
+                            tabEl.onclick = (e) => {
+                                if(e.target.className === 'tab-close') closeTab(id);
+                                else switchTab(id);
+                            };
+                            document.getElementById('tabs-container').appendChild(tabEl);
+                            
+                            // Generate Iframe
+                            const iframe = document.createElement('iframe');
+                            iframe.className = 'viewport';
+                            iframe.id = id + '-view';
+                            iframe.src = targetUrl;
+                            
+                            iframe.onload = () => {
+                                // Fallback title naming based on URL
+                                let displayTitle = targetUrl.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0];
+                                if(displayTitle === 'about:blank' || displayTitle === '') displayTitle = 'New Tab';
+                                tabEl.querySelector('.title').innerText = displayTitle.substring(0, 15) + (displayTitle.length > 15 ? '...' : '');
+                            };
+                            document.getElementById('viewports').appendChild(iframe);
+                            
+                            tabs.push({ id, url: targetUrl });
+                            switchTab(id);
+                        }
+
+                        // Switch Active Tab
+                        function switchTab(id) {
+                            activeTabId = id;
+                            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+                            
+                            const activeTabEl = document.getElementById(id + '-el');
+                            const activeView = document.getElementById(id + '-view');
+                            
+                            if (activeTabEl) activeTabEl.classList.add('active');
+                            if (activeView) {
+                                activeView.classList.add('active');
+                                const urlInput = document.getElementById('url-bar');
+                                urlInput.value = (activeView.src && activeView.src !== 'about:blank') ? activeView.src : '';
+                            }
+                        }
+
+                        // Close Tab
+                        function closeTab(id) {
+                            const idx = tabs.findIndex(t => t.id === id);
+                            if (idx > -1) {
+                                tabs.splice(idx, 1);
+                                document.getElementById(id + '-el').remove();
+                                document.getElementById(id + '-view').remove();
+                                
+                                if (tabs.length === 0) {
+                                    createTab('about:blank');
+                                } else if (activeTabId === id) {
+                                    switchTab(tabs[Math.max(0, idx - 1)].id);
+                                }
+                            }
+                        }
+
+                        // Event Listeners
+                        document.getElementById('new-tab').onclick = () => createTab('about:blank');
+                        
+                        document.getElementById('reload-btn').onclick = () => {
+                            const view = document.getElementById(activeTabId + '-view');
+                            if (view) view.src = view.src;
+                        };
+
+                        document.getElementById('url-bar').addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                let val = e.target.value;
+                                if (!val.startsWith('http') && val.trim() !== '') val = 'https://' + val;
+                                
+                                const view = document.getElementById(activeTabId + '-view');
+                                if (view) view.src = val;
+                                
+                                const tabEl = document.getElementById(activeTabId + '-el');
+                                let displayTitle = val.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0];
+                                if(tabEl) tabEl.querySelector('.title').innerText = displayTitle.substring(0, 15) + '...';
+                                e.target.blur();
+                            }
+                        });
+
+                        // Global Hotkeys
+                        window.addEventListener('keydown', (e) => {
+                            if (e.key === 'Escape') document.getElementById('stealth-ui').classList.toggle('hidden');
+                            if (e.key === '\`') window.location.replace('https://drive.google.com');
+                        });
+
+                        // Initialize the first tab with the requested URL
+                        createTab('${url}');
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            // Anti-Blocker logic
+            let win = window.open('about:blank', '_blank');
+            if (win) {
+                win.document.open();
+                win.document.write(stealthHTML);
+                win.document.close();
+            } else {
+                document.open();
+                document.write(stealthHTML);
+                document.close();
+            }
+        }
+
+        // Game Loader Engine (with localStorage Saves and new games)
+        function loadGame(type) {
+            const container = document.getElementById('gameViewportContainer');
+            container.innerHTML = `<iframe class="sandbox" id="gameFrame"></iframe>`;
+            const iframeDoc = document.getElementById('gameFrame').contentWindow.document;
+
+            let gameHtml = "";
+
+            if (type === 'cookie') {
+                gameHtml = `<!DOCTYPE html><html><head><style>body { background: #1a1a1a; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; user-select: none; } #cookie { font-size: 90px; cursor: pointer; transition: transform 0.1s; background: none; border: none; outline: none; } #cookie:active { transform: scale(0.9); } .shop-btn { background: #333; color: #fff; border: 1px solid #555; padding: 8px 15px; margin-top: 10px; border-radius: 5px; cursor: pointer; font-size: 14px; } .shop-btn:hover { background: #444; } .save-toast { font-size: 12px; color: #3fb950; margin-top: 10px; }</style></head><body><h1 style="margin-bottom:0;">Cookies: <span id="count">0</span></h1><p style="color:#888; margin-top:5px;">CPS: <span id="cps">0</span></p><button id="cookie" onclick="clickCookie()">🍪</button><button class="shop-btn" onclick="buyCursor()">Buy Cursor (+1/sec) - Cost: <span id="cost">15</span></button><div class="save-toast">💾 Auto-saving enabled</div><script>
+                    let s = JSON.parse(localStorage.getItem('hc_cookie')) || {c: 0, cps: 0, cost: 15};
+                    let cookies = s.c, cps = s.cps, cursorCost = s.cost;
+                    
+                    function save() { localStorage.setItem('hc_cookie', JSON.stringify({c: cookies, cps: cps, cost: cursorCost})); }
+                    function clickCookie() { cookies += 1; updateUI(); } 
+                    function buyCursor() { if (cookies >= cursorCost) { cookies -= cursorCost; cps += 1; cursorCost = Math.floor(cursorCost * 1.15); updateUI(); save(); } } 
+                    function updateUI() { document.getElementById('count').innerText = Math.floor(cookies); document.getElementById('cps').innerText = cps; document.getElementById('cost').innerText = cursorCost; } 
+                    
+                    setInterval(() => { cookies += cps / 10; updateUI(); }, 100);
+                    setInterval(save, 3000); // Save every 3 seconds
+                    updateUI();
+                <\/script></body></html>`;
+            } 
+            else if (type === 'snake') {
+                gameHtml = `<!DOCTYPE html><html><head><style>body { background: #111; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; } canvas { border: 2px solid #444; background: #222; margin-top: 10px; }</style></head><body>
+                <h3 style="margin:5px;">Score: <span id="score">0</span> | Best: <span id="best">0</span></h3>
+                <canvas id="cvs" width="300" height="300"></canvas>
+                <script>
+                    const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); 
+                    let snake = [{x: 10, y: 10}], food = {x: 5, y: 5}, dx = 1, dy = 0, score = 0;
+                    let best = localStorage.getItem('hc_snake') || 0;
+                    document.getElementById('best').innerText = best;
+                    
+                    document.addEventListener("keydown", e => {
+                        if(e.key === "ArrowLeft" && dx === 0) { dx = -1; dy = 0; }
+                        if(e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -1; }
+                        if(e.key === "ArrowRight" && dx === 0) { dx = 1; dy = 0; }
+                        if(e.key === "ArrowDown" && dy === 0) { dx = 0; dy = 1; }
+                    });
+                    
+                    setInterval(() => {
+                        let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                        // Game Over logic
+                        if(head.x < 0 || head.x >= 15 || head.y < 0 || head.y >= 15 || snake.some(p => p.x === head.x && p.y === head.y)) {
+                            if(score > best) { best = score; localStorage.setItem('hc_snake', best); document.getElementById('best').innerText = best; }
+                            snake = [{x: 10, y: 10}]; score = 0; dx = 1; dy = 0;
+                        }
+                        snake.unshift(head);
+                        if(head.x === food.x && head.y === food.y) {
+                            score += 10; food = {x: Math.floor(Math.random()*15), y: Math.floor(Math.random()*15)};
+                        } else { snake.pop(); }
+                        
+                        document.getElementById('score').innerText = score;
+                        ctx.fillStyle = "#222"; ctx.fillRect(0,0,300,300);
+                        ctx.fillStyle = "#ff5555"; ctx.fillRect(food.x*20, food.y*20, 18, 18);
+                        ctx.fillStyle = "#55ff55"; snake.forEach(p => ctx.fillRect(p.x*20, p.y*20, 18, 18));
+                    }, 120);
+                <\/script></body></html>`;
+            } 
+            else if (type === 'flappy') {
+                // New Flappy Block Game!
+                gameHtml = `<!DOCTYPE html><html><head><style>
+                body { background: #70c5ce; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #fff;}
+                canvas { background: #70c5ce; border-bottom: 5px solid #ded895; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+                h3 { position: absolute; top: 10px; text-shadow: 2px 2px #000; margin:0;}
+                .tut { position: absolute; top: 40px; font-size: 12px; text-shadow: 1px 1px #000; }
+                </style></head><body>
+                <h3>Score: <span id="s">0</span> | Best: <span id="bs">0</span></h3>
+                <p class="tut">Click or Space to Jump</p>
+                <canvas id="c" width="300" height="400"></canvas>
+                <script>
+                    const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+                    let frames = 0, score = 0, best = localStorage.getItem('hc_flap') || 0;
+                    document.getElementById('bs').innerText = best;
+                    
+                    const bird = { x: 50, y: 150, w: 20, h: 20, g: 0.25, v: 0, jump: 4.5, 
+                        draw() { ctx.fillStyle='#f0e13c'; ctx.fillRect(this.x, this.y, this.w, this.h); }, 
+                        update() { this.v += this.g; this.y += this.v; if(this.y + this.h >= cvs.height) reset(); } 
+                    };
+                    const pipes = { pos: [], w: 40, gap: 110, dx: 2, 
+                        draw() { ctx.fillStyle='#73bf2e'; for(let p of this.pos) { ctx.fillRect(p.x, 0, this.w, p.top); ctx.fillRect(p.x, p.top + this.gap, this.w, cvs.height - p.top - this.gap); } }, 
+                        update() { 
+                            if(frames % 100 === 0) this.pos.push({x: cvs.width, top: Math.random()*(cvs.height/2) + 20});
+                            for(let i=0; i<this.pos.length; i++) { 
+                                let p = this.pos[i]; p.x -= this.dx; 
+                                if(bird.x < p.x+this.w && bird.x+bird.w > p.x && (bird.y < p.top || bird.y+bird.h > p.top+this.gap)) reset();
+                                if(p.x === 50) { score++; document.getElementById('s').innerText = score; } 
+                                if(p.x + this.w <= 0) { this.pos.shift(); i--; } 
+                            } 
+                        } 
+                    };
+                    function reset() { 
+                        if(score > best) { best = score; localStorage.setItem('hc_flap', best); document.getElementById('bs').innerText = best; } 
+                        score = 0; document.getElementById('s').innerText = score; bird.y = 150; bird.v = 0; pipes.pos = []; frames = 0; 
+                    }
+                    cvs.addEventListener('mousedown', () => bird.v = -bird.jump);
+                    window.addEventListener('keydown', (e) => { if(e.code === 'Space') bird.v = -bird.jump; });
+                    
+                    function loop() { 
+                        ctx.clearRect(0,0,cvs.width,cvs.height); 
+                        bird.draw(); bird.update(); pipes.draw(); pipes.update(); 
+                        frames++; requestAnimationFrame(loop); 
+                    }
+                    loop();
+                <\/script></body></html>`;
+            }
+            else if (type === 'pong') {
+                gameHtml = `<!DOCTYPE html><html><head><style>body { background: #111; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; } canvas { border: 2px solid #444; background: #000; }</style></head><body><h3>Classic Pong</h3><canvas id="cvs" width="400" height="250"></canvas><script>const cvs = document.getElementById("cvs"); const ctx = cvs.getContext("2d"); let py = 90, by = 125, bx = 200, bdx = 3, bdy = 2; document.addEventListener("mousemove", e => { let rect = cvs.getBoundingClientRect(); py = e.clientY - rect.top - 30; }); setInterval(() => { bx += bdx; by += bdy; if(by < 0 || by > 250) bdy *= -1; if(bx < 20 && by > py && by < py + 60) bdx *= -1; if(bx > 390) bdx *= -1; if(bx < 0) { bx = 200; by = 125; } ctx.fillStyle = "#000"; ctx.fillRect(0,0,400,250); ctx.fillStyle = "#fff"; ctx.fillRect(10, py, 10, 60); ctx.fillRect(380, by - 20, 10, 60); ctx.fillRect(bx, by, 10, 10); }, 30);<\/script></body></html>`;
+            }
+
+            iframeDoc.open();
+            iframeDoc.write(gameHtml);
+            iframeDoc.close();
+        }
+    </script>
+</body>
+</html>
