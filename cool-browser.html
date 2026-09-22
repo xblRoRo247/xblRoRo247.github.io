@@ -3,167 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title>
+    <title>Online Calculator</title>
     <style>
         :root {
-            --bg: #0d1117;
-            --card-bg: #161b22;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --accent: #58a6ff;
-            --accent-hover: #1f6feb;
-            --green: #3fb950;
-            --danger: #f85149;
-            --gold: #d29922;
+            --accent: #a8eb12; 
+            --accent-hover: #8cc20e;
+            --danger: #ff4757;
+            --text: #e1e1e1;
+            --bg-color: #0d1117;
         }
-        body { margin: 0; padding: 0; background-color: #fff; color: #202124; min-height: 100vh; box-sizing: border-box; overflow-x: hidden; }
         
-        /* --- SECURE DISGUISED LOCK SCREEN (Chrome No Internet Page) --- */
-        #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; padding-top: 10vh; align-items: center; }
-        .offline-container { max-width: 600px; width: 90%; padding: 20px; }
-        .offline-icon { width: 44px; height: 48px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="48" viewBox="0 0 44 48"><path fill="%23535353" d="M10 33h4v4h-4zm18 0h4v4h-4zM14 37h4v4h-4zm10 0h4v4h-4zm-6 4h4v4h-4zM18 1h16v4h-16zm12 4h4v4h-4zm-8 4h20v4H22zm16 4h4v8h-4zm-8 4h4v4h-4zm-4 4h4v4h-4zm-20 4h20v4H6zm0 0h4v-4H2v-4H0v12h6z"/></svg>'); background-repeat: no-repeat; margin-bottom: 25px; }
-        .offline-title { font-size: 1.5rem; font-weight: 500; margin-bottom: 10px; color: #202124; }
-        .offline-text { font-size: 0.95rem; color: #5f6368; line-height: 1.6; margin-bottom: 15px; }
-        .offline-list { color: #5f6368; font-size: 0.95rem; line-height: 1.6; padding-left: 40px; margin-bottom: 30px; }
-        .offline-error-code { color: #70757a; font-size: 0.85rem; }
+        body { margin: 0; padding: 0; background-color: #f0f2f5; color: #333; min-height: 100vh; box-sizing: border-box; overflow-x: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background 0.5s ease; }
+        
+        /* --- FUNCTIONAL CALCULATOR LOCK SCREEN --- */
+        #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999999; }
+        .calc-wrapper { background: #202124; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 320px; }
+        #calc-display { background: #323639; color: #fff; font-size: 2.5rem; text-align: right; padding: 15px; border-radius: 10px; margin-bottom: 20px; min-height: 45px; overflow: hidden; font-family: monospace; word-wrap: break-word; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .calc-btn { background: #3c4043; color: #e8eaed; border: none; padding: 20px 0; font-size: 1.5rem; border-radius: 10px; cursor: pointer; transition: background 0.1s; }
+        .calc-btn:hover { background: #5f6368; }
+        .calc-btn:active { background: #9aa0a6; }
+        .calc-btn.op { background: #ff9800; color: #fff; font-weight: bold; }
+        .calc-btn.op:hover { background: #f57c00; }
+        .calc-btn.clear { background: #ea4335; color: #fff; font-weight: bold; }
+        .calc-btn.clear:hover { background: #d32f2f; }
+        .calc-title { text-align: center; color: #5f6368; font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; }
 
-        /* --- HUB STYLES (Injected only after unlock) --- */
-        #hub-container { display: none; width: 100%; max-width: 950px; margin: 0 auto; padding: 20px; flex-direction: column; align-items: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        header { text-align: center; margin-bottom: 25px; width: 100%; }
-        header h1 { margin: 0 0 8px 0; color: #fff; font-size: 2rem; }
-        header p { color: #8b949e; margin: 0; }
-        .card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); width: 100%; box-sizing: border-box; }
-        .card h2 { margin-top: 0; font-size: 1.2rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .badge { background: rgba(88, 166, 255, 0.15); color: var(--accent); font-size: 11px; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(88, 166, 255, 0.3); }
-        .badge.danger { background: rgba(248, 81, 73, 0.15); color: var(--danger); border-color: rgba(248, 81, 73, 0.3); }
-        .badge.safe { background: rgba(63, 185, 80, 0.15); color: var(--green); border-color: rgba(63, 185, 80, 0.3); }
-        .hub-input { width: 100%; padding: 10px; background: #0d1117; border: 1px solid var(--border); color: var(--text); border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; outline: none; }
-        .hub-input:focus { border-color: var(--accent); }
-        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn { background-color: var(--accent-hover); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; width: 100%; margin-bottom: 10px; }
-        .btn:hover { background-color: var(--accent); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 15px; }
-        .hub-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 15px; border-radius: 6px; cursor: pointer; text-align: center; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        .hub-btn:hover { background: #30363d; border-color: var(--accent); transform: translateY(-2px); }
-        .hub-btn.game { border-color: var(--green); }
-        .hub-btn.game:hover { background: #1a3422; border-color: var(--green); }
-        .game-viewport { width: 100%; height: 450px; background: #161b22; border: 1px solid var(--border); border-radius: 6px; margin-top: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        /* --- BACKGROUND ANIMATION --- */
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        /* --- HUB STYLES --- */
+        #hub-container { display: none; width: 100%; max-width: 1000px; margin: 0 auto; padding: 40px 20px; flex-direction: column; align-items: center; color: var(--text); position: relative; }
+        header { text-align: center; margin-bottom: 35px; width: 100%; position: relative; }
+        header h1 { margin: 0 0 10px 0; color: #fff; font-size: 2.5rem; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        header p { color: #aaa; margin: 0; font-size: 1.1rem; }
+        
+        .card { background: rgba(20, 25, 35, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); width: 100%; box-sizing: border-box; }
+        .card h2 { margin-top: 0; font-size: 1.4rem; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 11px; padding: 5px 10px; border-radius: 20px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .badge.danger { color: var(--danger); border-color: rgba(255, 71, 87, 0.4); background: rgba(255, 71, 87, 0.1); }
+        .badge.safe { color: var(--accent); border-color: var(--accent); background: rgba(255, 255, 255, 0.05); }
+        .badge.epic { color: #9c88ff; border-color: #9c88ff; background: rgba(156, 136, 255, 0.1); }
+        
+        .hub-input, select.hub-input { width: 100%; padding: 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 10px; box-sizing: border-box; margin-bottom: 15px; outline: none; transition: 0.3s; font-size: 1rem; }
+        .hub-input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(168, 235, 18, 0.2); background: rgba(0, 0, 0, 0.5); }
+        .hub-input option { background: #161b22; color: #fff; }
+        
+        .input-group { display: flex; gap: 15px; margin-bottom: 15px; }
+        .btn { background-color: var(--accent); color: #000; border: none; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 900; transition: all 0.2s; width: 100%; margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(168, 235, 18, 0.4); }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
+        .hub-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 18px; border-radius: 12px; cursor: pointer; text-align: center; font-size: 14px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .hub-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(168, 235, 18, 0.2); color: var(--accent); }
+        
+        .game-viewport { width: 100%; height: 500px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; margin-top: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
         iframe.sandbox { width: 100%; height: 100%; border: none; background: #fff; }
-        .instructions { background: #0d1117; padding: 12px; border-radius: 6px; border-left: 3px solid var(--danger); font-size: 13px; color: #8b949e; margin-bottom: 15px; line-height: 1.5; }
-        .instructions strong { color: var(--text); }
+        .instructions { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border-left: 4px solid var(--accent); font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
+        .instructions strong { color: #fff; }
+
+        /* --- SETTINGS MODAL & BUTTONS --- */
+        #settings-modal { display: none; position: fixed; z-index: 10000000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
+        .modal-content { max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; margin: 0; }
+        .close-btn { color: #aaa; position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: #fff; }
+        .setting-row { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .setting-row label { font-weight: bold; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .top-btns { position: absolute; right: 0; top: 0; display: flex; gap: 10px; }
+        .icon-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.2s; backdrop-filter: blur(10px); }
+        .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* --- GHOSTNET CHAT --- */
+        #chat-box { height: 150px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-family: monospace; font-size: 13px; }
+        .chat-msg { margin-bottom: 5px; }
+        .chat-you { color: var(--accent); }
+        .chat-them { color: #58a6ff; }
     </style>
 </head>
 <body>
 
-    <!-- DISGUISED LOCK SCREEN -->
+    <!-- CALCULATOR LOCK SCREEN -->
     <div id="lock-screen">
-        <div class="offline-container">
-            <div class="offline-icon"></div>
-            <div class="offline-title">No internet</div>
-            <div class="offline-text">Try:</div>
-            <ul class="offline-list">
-                <li>Checking the network cables, modem, and router</li>
-                <li>Reconnecting to Wi-Fi</li>
-            </ul>
-            <div class="offline-error-code">ERR_INTERNET_DISCONNECTED</div>
+        <div class="calc-title">Math Tools</div>
+        <div class="calc-wrapper">
+            <div id="calc-display">0</div>
+            <div class="calc-grid">
+                <button class="calc-btn clear" onclick="calcInput('C')">C</button>
+                <button class="calc-btn op" onclick="calcInput('(')">(</button>
+                <button class="calc-btn op" onclick="calcInput(')')">)</button>
+                <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+                <button class="calc-btn" onclick="calcInput('7')">7</button>
+                <button class="calc-btn" onclick="calcInput('8')">8</button>
+                <button class="calc-btn" onclick="calcInput('9')">9</button>
+                <button class="calc-btn op" onclick="calcInput('*')">×</button>
+                <button class="calc-btn" onclick="calcInput('4')">4</button>
+                <button class="calc-btn" onclick="calcInput('5')">5</button>
+                <button class="calc-btn" onclick="calcInput('6')">6</button>
+                <button class="calc-btn op" onclick="calcInput('-')">−</button>
+                <button class="calc-btn" onclick="calcInput('1')">1</button>
+                <button class="calc-btn" onclick="calcInput('2')">2</button>
+                <button class="calc-btn" onclick="calcInput('3')">3</button>
+                <button class="calc-btn op" onclick="calcInput('+')">+</button>
+                <button class="calc-btn" onclick="calcInput('0')">0</button>
+                <button class="calc-btn" onclick="calcInput('.')">.</button>
+                <button class="calc-btn" onclick="calcInput('Del')">Del</button>
+                <button class="calc-btn op" onclick="calcInput('=')">=</button>
+            </div>
         </div>
     </div>
 
-    <!-- HUB CONTAINER (Empty until unlocked) -->
-    <div id="hub-container"></div>
+    <!-- HUB CONTAINER -->
+    <div id="hub-container">
+        
+        <!-- FULL CUSTOMIZATION SETTINGS MODAL -->
+        <div id="settings-modal">
+            <div class="card modal-content">
+                <span class="close-btn" onclick="closeSettings()">&times;</span>
+                <h2 style="border:none;">⚙️ System Settings</h2>
+                
+                <div class="setting-row">
+                    <label>Lock Screen Password</label>
+                    <input type="text" id="set-pwd" class="hub-input" placeholder="greenhacker12" onchange="saveSettings()">
+                </div>
+                
+                <div class="setting-row">
+                    <label>Accent Theme</label>
+                    <select id="set-theme" class="hub-input" onchange="saveSettings()">
+                        <option value="green">Petezah Green</option>
+                        <option value="blue">Cyber Blue</option>
+                        <option value="red">Lava Red</option>
+                        <option value="purple">Amethyst</option>
+                    </select>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Custom Background URL (Overrides Animation)</label>
+                    <input type="text" id="set-bgurl" class="hub-input" placeholder="https://..." onchange="saveSettings()">
+                </div>
+                
+                <div class="setting-row">
+                    <label>Background Animation</label>
+                    <select id="set-bg" class="hub-input" onchange="saveSettings()">
+                        <option value="on">Animated (Deep Space)</option>
+                        <option value="off">Static (Performance Mode)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label>Panic Key Binder</label>
+                    <button id="set-panickey" class="btn" style="background: rgba(255,255,255,0.1); color:#fff;" onclick="bindPanicKey()">Current: ` (Click to change)</button>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Panic Mode Type</label>
+                    <select id="set-panicmode" class="hub-input" onchange="saveSettings()">
+                        <option value="redirect">Standard Redirect (Safe)</option>
+                        <option value="decoy">Active Decoy (Auto-typing Essay)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label>Panic Redirect URL</label>
+                    <input type="text" id="set-panicurl" class="hub-input" value="https://classroom.google.com" onchange="saveSettings()">
+                </div>
+                
+                <div class="setting-row" style="margin-top: 10px;">
+                    <button class="btn" style="background: var(--danger); color: white;" onclick="clearGameData()">🗑️ Wipe All Game Saves</button>
+                </div>
+            </div>
+        </div>
+
+        <header>
+            <div class="top-btns">
+                <button class="icon-btn" id="music-btn" onclick="toggleMusic()">🎵 Music: OFF</button>
+                <button class="icon-btn" onclick="openSettings()">⚙️ Settings</button>
+            </div>
+            <h1>🍕 Petezah Hub <span style="font-size: 1rem; color:var(--accent);">v15.1 DEV</span></h1>
+            <p>Protocol Zero Enabled (Shift + Esc)</p>
+        </header>
+
+        <!-- SERVERLESS GHOSTNET CHAT -->
+        <div class="card">
+            <h2>🌐 GhostNet Comms <span class="badge safe">Serverless WebRTC Sync</span></h2>
+            <div class="instructions">
+                A localized peer-to-peer network. Messages sync instantly across all open Hub tabs without ever touching a server. Unblockable by school IT.
+            </div>
+            <div id="chat-box">
+                <div class="chat-msg" style="color: #888;">System: GhostNet Secure Link Established.</div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="chat-input" class="hub-input" placeholder="Transmit message to network..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') sendChat()">
+                <button class="btn" style="width: auto; margin-bottom:0;" onclick="sendChat()">Send</button>
+            </div>
+        </div>
+
+        <!-- DEVELOPER & AI TOOLS -->
+        <div class="card">
+            <h2>💻 Developer & AI Tools <span class="badge safe">Built-In Locally</span></h2>
+            <div class="grid">
+                <div class="hub-btn" style="border-color: #9c88ff;" onclick="loadGame('ai')">🤖 Ghost AI</div>
+                <div class="hub-btn" style="border-color: #58a6ff;" onclick="loadGame('coderunner')">💻 Code Runner</div>
+                <div class="hub-btn" style="border-color: #ff9800;" onclick="loadGame('console')">🛠️ JS Console</div>
+            </div>
+        </div>
+
+        <!-- STEALTH BROWSER WITH INJECTOR -->
+        <div class="card">
+            <h2>
+                🌐 Cloak Engine
+                <div>
+                    <span class="badge epic">&lt;/&gt; Injector Added</span>
+                    <span class="badge danger">Ghost Mode</span>
+                </div>
+            </h2>
+            <div class="instructions">
+                <strong>1. Hub Injector:</strong> The new <strong>&lt;/&gt;</strong> button in the browser lets you inject custom JS hacks directly into the tab!<br>
+                <strong>2. Hover UI:</strong> The address bar is <em>invisible</em>. Move your mouse to the top edge to reveal it.
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="customTitle" class="hub-input" placeholder="Custom Tab Name (e.g. Google Docs)" style="margin-bottom: 0;">
+                <input type="text" id="customIcon" class="hub-input" placeholder="Favicon URL (Optional)" style="margin-bottom: 0;">
+            </div>
+            <input type="text" id="customUrl" class="hub-input" placeholder="Enter URL (e.g., https://example.com) or search...">
+            <button class="btn" onclick="launchGhostStealth()">Launch Ghost Browser</button>
+        </div>
+
+        <!-- ARCADE -->
+        <div class="card">
+            <h2>🎮 Local Arcade <span class="badge">Auto-Save Enabled</span></h2>
+            <div class="grid">
+                <div class="hub-btn game" onclick="loadGame('cookie')">🍪 Cookie Idle</div>
+                <div class="hub-btn game" onclick="loadGame('snake')">🐍 Retro Snake</div>
+                <div class="hub-btn game" onclick="loadGame('flappy')">🐦 Flappy Block</div>
+                <div class="hub-btn game" onclick="loadGame('pong')">🏓 Pong (vs AI)</div>
+                <div class="hub-btn game" onclick="loadGame('breakout')">🧱 Breakout</div>
+                <div class="hub-btn game" onclick="loadGame('space')">🚀 Space Shooter</div>
+                <div class="hub-btn game" onclick="loadGame('aim')">🎯 Aim Trainer</div>
+            </div>
+            <div class="game-viewport" id="gameViewportContainer">
+                <p style="color: #666; font-size: 1.2rem;">Select a tool or game above to initialize</p>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // --- 1. BLIND KEYLOGGER AUTHENTICATION SYSTEM ---
-        const correctPassword = "greenhacker12";
+        // --- 0. GHOSTNET CHAT LOGIC (SERVERLESS SYNC) ---
+        const ghostChannel = new BroadcastChannel('ghostnet_comms');
+        ghostChannel.onmessage = (e) => {
+            const box = document.getElementById('chat-box');
+            box.innerHTML += `<div class="chat-msg"><span class="chat-them">[Network]:</span> ${e.data}</div>`;
+            box.scrollTop = box.scrollHeight;
+        };
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if(!input.value.trim()) return;
+            const box = document.getElementById('chat-box');
+            box.innerHTML += `<div class="chat-msg"><span class="chat-you">[You]:</span> ${input.value}</div>`;
+            box.scrollTop = box.scrollHeight;
+            ghostChannel.postMessage(input.value);
+            input.value = '';
+        }
+
+        // --- 0.5 MUSIC GENERATOR ---
+        let audioCtx, isMusicPlaying = false, musicInterval;
+        function toggleMusic() {
+            if(isMusicPlaying) {
+                if(audioCtx) audioCtx.suspend(); clearInterval(musicInterval); isMusicPlaying = false;
+                document.getElementById('music-btn').innerText = "🎵 Music: OFF";
+                document.getElementById('music-btn').style.borderColor = "rgba(255,255,255,0.2)";
+                document.getElementById('music-btn').style.color = "#fff";
+            } else {
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioCtx.resume();
+                const masterGain = audioCtx.createGain(); masterGain.gain.value = 0.08; masterGain.connect(audioCtx.destination);
+                function playNote(freq, dur) {
+                    if(!isMusicPlaying) return;
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(masterGain);
+                    osc.start(); gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.stop(audioCtx.currentTime + dur);
+                }
+                const scale = [196.00, 220.00, 246.94, 293.66, 329.63, 392.00, 440.00]; 
+                musicInterval = setInterval(() => {
+                    if(audioCtx.state === 'running') {
+                        let note = scale[Math.floor(Math.random() * scale.length)];
+                        playNote(note / 2, 2.5); if(Math.random() > 0.3) playNote(note, 1.5); 
+                    }
+                }, 600);
+                isMusicPlaying = true; document.getElementById('music-btn').innerText = "🎵 Music: ON";
+                document.getElementById('music-btn').style.borderColor = "var(--accent)"; document.getElementById('music-btn').style.color = "var(--accent)";
+            }
+        }
+
+        // --- 1. SETTINGS MANAGER ---
+        let appSettings = JSON.parse(localStorage.getItem('gh_settings_v15')) || { 
+            theme: 'green', panicKey: '\`', panicUrl: 'https://classroom.google.com', 
+            panicMode: 'redirect', bgAnimation: 'on', password: 'greenhacker12', bgUrl: ''
+        };
+        let isBindingKey = false;
+
+        function applySettings() {
+            const root = document.documentElement;
+            if(appSettings.theme === 'green') { root.style.setProperty('--accent', '#a8eb12'); root.style.setProperty('--accent-hover', '#8cc20e'); }
+            else if(appSettings.theme === 'blue') { root.style.setProperty('--accent', '#58a6ff'); root.style.setProperty('--accent-hover', '#1f6feb'); }
+            else if(appSettings.theme === 'red') { root.style.setProperty('--accent', '#ff4757'); root.style.setProperty('--accent-hover', '#ff6b81'); }
+            else if(appSettings.theme === 'purple') { root.style.setProperty('--accent', '#9c88ff'); root.style.setProperty('--accent-hover', '#8c7ae6'); }
+            
+            if (appSettings.bgUrl && appSettings.bgUrl.trim() !== "") {
+                document.body.style.background = `url('${appSettings.bgUrl}') no-repeat center center fixed`; document.body.style.backgroundSize = 'cover'; document.body.style.animation = "none";
+            } else if(appSettings.bgAnimation === 'on') {
+                document.body.style.background = "linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #0f0c29)"; document.body.style.backgroundSize = "400% 400%"; document.body.style.animation = "gradientBG 15s ease infinite";
+            } else { document.body.style.background = "#0d1117"; document.body.style.animation = "none"; }
+
+            document.getElementById('set-theme').value = appSettings.theme;
+            document.getElementById('set-bg').value = appSettings.bgAnimation;
+            document.getElementById('set-panicurl').value = appSettings.panicUrl;
+            document.getElementById('set-panicmode').value = appSettings.panicMode;
+            document.getElementById('set-pwd').value = appSettings.password;
+            document.getElementById('set-bgurl').value = appSettings.bgUrl;
+            document.getElementById('set-panickey').innerText = `Current: ${appSettings.panicKey} (Click to change)`;
+            document.getElementById('panic-disp-text').innerText = appSettings.panicKey;
+        }
+
+        function saveSettings() {
+            appSettings.theme = document.getElementById('set-theme').value;
+            appSettings.panicUrl = document.getElementById('set-panicurl').value;
+            appSettings.panicMode = document.getElementById('set-panicmode').value;
+            appSettings.bgAnimation = document.getElementById('set-bg').value;
+            appSettings.password = document.getElementById('set-pwd').value || "greenhacker12";
+            appSettings.bgUrl = document.getElementById('set-bgurl').value;
+            localStorage.setItem('gh_settings_v15', JSON.stringify(appSettings)); applySettings();
+        }
+
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; applySettings(); }
+        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; isBindingKey = false; }
+        function bindPanicKey() { isBindingKey = true; document.getElementById('set-panickey').innerText = "Press any key..."; document.getElementById('set-panickey').style.background = "var(--danger)"; }
+        function clearGameData() { if(confirm("Delete all high scores?")) { localStorage.removeItem('gh_c'); localStorage.removeItem('gh_s'); localStorage.removeItem('gh_f'); alert("Data wiped."); } }
+
+        // --- 2. CALCULATOR LOGIC ---
+        let calcStr = "";
+        function calcInput(val) {
+            const display = document.getElementById('calc-display');
+            if (val === 'C') calcStr = "";
+            else if (val === 'Del') calcStr = calcStr.slice(0, -1);
+            else if (val === '=') { try { calcStr = Function("return " + calcStr)().toString(); } catch(e) { calcStr = "Error"; } }
+            else { if (calcStr === "Error") calcStr = ""; calcStr += val; }
+            display.innerText = calcStr === "" ? "0" : calcStr;
+        }
+
+        // --- ACTIVE DECOY (AUTO-TYPING ESSAY) ---
+        function triggerActiveDecoy() {
+            const essay = "The American Revolution was an ideological and political revolution that occurred in British America between 1765 and 1791. The Americans in the Thirteen Colonies formed independent states that defeated the British in the American Revolutionary War. During this period, the colonists resisted the taxes imposed by the British Parliament, claiming taxation without representation was tyranny. This led to the Declaration of Independence in 1776... ";
+            let i = 0;
+            document.body.innerHTML = `<div style="background:#f1f3f4;height:100vh;font-family:Arial,sans-serif;margin:0;"><div style="background:#fff;padding:10px 20px;border-bottom:1px solid #ccc;display:flex;align-items:center;gap:10px;"><div style="width:20px;height:20px;background:#4285f4;border-radius:2px;"></div><b style="color:#555;font-size:14px;">History Essay - Google Docs</b></div><div style="max-width:800px;margin:20px auto;background:#fff;height:80vh;padding:50px;box-shadow:0 0 10px rgba(0,0,0,0.1);"><h1 style="text-align:center;font-size:20px;">The Road to Independence</h1><p id="essay-box" style="line-height:2;font-size:14px;color:#333;"></p></div></div>`;
+            document.title = "History Essay - Google Docs";
+            setInterval(() => { if (i < essay.length) { document.getElementById('essay-box').innerHTML += essay.charAt(i); i++; } }, 40);
+        }
+
+        // --- 3. BLIND KEYLOGGER, PANIC, & PROTOCOL ZERO ---
         let keyBuffer = "";
         const lockScreen = document.getElementById('lock-screen');
         const hubContainer = document.getElementById('hub-container');
 
-        const hubHTML = `
-            <header>
-                <h1>Ultimate Ghost Hub v8.3</h1>
-                <p>Maximum stealth about:blank portal. Invisible Hover-UI active.</p>
-            </header>
-
-            <div class="card">
-                <h2>
-                    🚀 Advanced about:blank Cloaker
-                    <div>
-                        <span class="badge safe">Network Safe 🛡️</span>
-                        <span class="badge danger">Visual Stealth 💀</span>
-                    </div>
-                </h2>
-                <div class="instructions">
-                    <strong>1. Network Filtering Active:</strong> This completely respects all network-level firewalls and content filters. Blocked sites will not load.<br>
-                    <strong>2. Hover UI:</strong> The address bar is <em>invisible</em>. Move your mouse to the very top edge of the window to reveal it.<br>
-                    <strong>3. Zero History:</strong> Embedded searches leave zero local history.<br>
-                    <strong>4. Panic Wipe:</strong> Pressing <strong>\`</strong> (Backtick) instantly wipes the page and redirects to Google Classroom.
-                </div>
-                
-                <div class="input-group">
-                    <input type="text" id="customTitle" class="hub-input" placeholder="Masked Title (Defaults to 'Google Docs')" style="margin-bottom: 0;">
-                    <input type="text" id="customIcon" class="hub-input" placeholder="Favicon URL (Optional)" style="margin-bottom: 0;">
-                </div>
-                <input type="text" id="customUrl" class="hub-input" placeholder="Starting URL (e.g., https://example.com)...">
-                
-                <button class="btn" onclick="launchGhostStealth()">Launch Ghost Browser</button>
-                
-                <div class="grid">
-                    <div class="hub-btn" onclick="launchStealth('https://www.google.com/webhp?igu=1')">Google Search</div>
-                    <div class="hub-btn" onclick="launchStealth('https://en.wikipedia.org')">Wikipedia</div>
-                    <div class="hub-btn" onclick="launchStealth('https://github.com')">GitHub</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>🕹️ Auto-Save Arcade <span class="badge">Local Storage Active</span></h2>
-                <div class="grid">
-                    <div class="hub-btn game" onclick="loadGame('cookie')">🍪 Cookie Idle</div>
-                    <div class="hub-btn game" onclick="loadGame('snake')">🐍 Retro Snake</div>
-                    <div class="hub-btn game" onclick="loadGame('flappy')">🐦 Flappy Block</div>
-                    <div class="hub-btn game" onclick="loadGame('pong')">🏓 Pong (vs AI)</div>
-                    <div class="hub-btn game" onclick="loadGame('breakout')">🧱 Breakout</div>
-                </div>
-                <div class="game-viewport" id="gameViewportContainer">
-                    <p style="color: #8b949e;">Select a game above to start playing!</p>
-                </div>
-            </div>
-        `;
-
         window.addEventListener('keydown', function(e) {
-            // Panic Button works even on the lock screen
-            if (e.key === '\`') {
-                window.location.replace("https://classroom.google.com");
+            // PROTOCOL ZERO: Wipe & Burn
+            if (e.shiftKey && e.key === 'Escape') {
+                localStorage.clear(); sessionStorage.clear();
+                window.location.replace('https://www.google.com');
                 return;
             }
+
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                if (e.key === appSettings.panicKey && !isBindingKey) { 
+                    if(appSettings.panicMode === 'decoy') triggerActiveDecoy(); else window.location.replace(appSettings.panicUrl); 
+                }
+                return;
+            }
+
+            if (isBindingKey) { appSettings.panicKey = e.key; isBindingKey = false; document.getElementById('set-panickey').style.background = "rgba(255,255,255,0.1)"; saveSettings(); return; }
             
-            // Listen for keylogger if lock screen is active
+            // Trigger Panic
+            if (e.key === appSettings.panicKey) { 
+                if(appSettings.panicMode === 'decoy') triggerActiveDecoy(); else window.location.replace(appSettings.panicUrl); 
+                return; 
+            }
+            
             if (lockScreen.style.display !== 'none') {
+                const validCalcKeys = "0123456789+-*/.()";
+                if (validCalcKeys.includes(e.key)) calcInput(e.key);
+                if (e.key === "Enter" || e.key === "=") { e.preventDefault(); calcInput('='); }
+                if (e.key === "Backspace") calcInput('Del');
+                if (e.key.toLowerCase() === "c") calcInput('C');
+
                 if (e.key.length === 1) {
                     keyBuffer += e.key;
-                    if (keyBuffer.length > correctPassword.length) {
-                        keyBuffer = keyBuffer.substring(keyBuffer.length - correctPassword.length);
-                    }
-                    
-                    if (keyBuffer === correctPassword) {
-                        lockScreen.style.display = 'none';
-                        document.body.style.backgroundColor = 'var(--bg)';
-                        document.body.style.color = 'var(--text)';
-                        hubContainer.innerHTML = hubHTML;
-                        hubContainer.style.display = 'flex';
-                        document.title = "Dashboard";
-                        e.preventDefault(); 
+                    if (keyBuffer.length > appSettings.password.length) keyBuffer = keyBuffer.substring(keyBuffer.length - appSettings.password.length);
+                    if (keyBuffer === appSettings.password) {
+                        lockScreen.style.display = 'none'; hubContainer.style.display = 'flex';
+                        applySettings(); document.title = "Dashboard"; e.preventDefault(); 
                     }
                 }
             }
         });
 
-        // --- 2. GHOST BROWSER ENGINE ---
+        // --- 4. GHOST BROWSER WITH INJECTOR (NO DECOY BLUR OVERLAY) ---
         function launchGhostStealth() {
             const url = document.getElementById('customUrl').value || 'https://www.google.com/webhp?igu=1';
-            const title = document.getElementById('customTitle').value;
-            const icon = document.getElementById('customIcon').value;
-            launchStealth(url, title, icon);
+            const title = document.getElementById('customTitle').value; const icon = document.getElementById('customIcon').value; launchStealth(url, title, icon);
         }
 
         function launchStealth(url, title, iconUrl) {
@@ -181,84 +430,123 @@
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff; font-family: Arial, sans-serif; }
                         #hover-trigger { position: absolute; top: 0; left: 0; width: 100%; height: 15px; z-index: 999998; }
-                        #nav-bar { 
-                            position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 700px;
-                            background: rgba(30,30,30,0.95); backdrop-filter: blur(10px); padding: 8px 15px; border-radius: 0 0 15px 15px;
-                            display: flex; gap: 10px; align-items: center; z-index: 999999; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-                            transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                        }
-                        #hover-trigger:hover + #nav-bar, #nav-bar:hover, #nav-bar:focus-within { top: 0; }
+                        #stealth-ui { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 900px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); border-radius: 0 0 15px 15px; display: flex; flex-direction: column; z-index: 999999; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                        #hover-trigger:hover + #stealth-ui, #stealth-ui:hover, #stealth-ui:focus-within { top: 0; }
+                        #tabs-bar { display: flex; padding: 8px 8px 0 8px; align-items: flex-end; gap: 4px; background: #000; }
+                        .tab { background: #202124; color: #9aa0a6; padding: 8px 12px; border-radius: 8px 8px 0 0; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 160px; justify-content: space-between; border-right: 1px solid #333; }
+                        .tab.active { background: #323639; color: #fff; border-right: none; }
+                        .tab-close { color: #9aa0a6; border: none; background: transparent; cursor: pointer; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 14px; padding: 0; }
+                        .tab-close:hover { background: #5f6368; color: #fff; }
+                        #new-tab { background: transparent; color: #9aa0a6; border: none; font-size: 20px; cursor: pointer; padding: 0 10px; margin-bottom: 5px; }
+                        #new-tab:hover { color: #fff; }
+                        #nav-bar { background: #323639; padding: 6px 12px; display: flex; gap: 10px; align-items: center; border-radius: 0 0 15px 15px;}
                         .nav-btn { background: #444; color: #fff; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-weight: bold; }
                         .nav-btn:hover { background: #666; }
                         .danger-btn { background: #da3633; } .danger-btn:hover { background: #b62324; }
+                        .inj-btn { background: #202124; color: #a8eb12; border: 1px solid #a8eb12; } .inj-btn:hover { background: #a8eb12; color: #000; }
                         #url-bar { flex-grow: 1; background: #111; border: 1px solid #555; color: #fff; padding: 8px 15px; border-radius: 20px; outline: none; }
-                        #url-bar:focus { border-color: #58a6ff; }
-                        #viewports { width: 100%; height: 100%; position: relative; }
-                        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
+                        #url-bar:focus { border-color: ${appSettings.theme === 'green' ? '#a8eb12' : '#58a6ff'}; }
+                        #viewports { width: 100%; height: 100%; position: relative; background: #fff; }
+                        .viewport { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: #fff; }
+                        .viewport.active { display: block; }
                     </style>
                 </head>
                 <body>
                     <div id="hover-trigger"></div>
-                    <div id="nav-bar">
-                        <button class="nav-btn" onclick="document.getElementById('main-view').src = document.getElementById('main-view').src">&#8635;</button>
-                        <input type="text" id="url-bar" placeholder="Hover top edge to reveal. Search or type URL..." />
-                        <button class="nav-btn danger-btn" onclick="window.location.replace('https://classroom.google.com')" title="Panic Button (\`)">Panic</button>
+                    <div id="stealth-ui">
+                        <div id="tabs-bar"><div id="tabs-container" style="display:flex; gap:4px; overflow-x: auto;"></div><button id="new-tab">+</button></div>
+                        <div id="nav-bar">
+                            <button class="nav-btn" id="reload-btn">&#8635;</button>
+                            <input type="text" id="url-bar" placeholder="Search or type URL..." />
+                            <button class="nav-btn inj-btn" onclick="injectCode()" title="Inject Script">&lt;/&gt;</button>
+                            <button class="nav-btn danger-btn" onclick="window.location.replace('${appSettings.panicUrl}')" title="Panic">Panic</button>
+                        </div>
                     </div>
-                    <div id="viewports"><iframe id="main-view" src="${url}"></iframe></div>
+                    <div id="viewports"></div>
+                    
                     <script>
-                        // Zero History Navigation Swap (Uses Embedded Google to fix "refuses to connect")
+                        let tabCount = 0; let tabs = []; let activeTabId = null;
+                        function createTab(targetUrl) {
+                            tabCount++; const id = 'tab-' + tabCount;
+                            const tabEl = document.createElement('div'); tabEl.className = 'tab'; tabEl.id = id + '-el';
+                            tabEl.innerHTML = '<span class="title">Loading...</span><button class="tab-close">&times;</button>';
+                            tabEl.onclick = (e) => { if(e.target.className === 'tab-close') closeTab(id); else switchTab(id); };
+                            document.getElementById('tabs-container').appendChild(tabEl);
+                            const iframe = document.createElement('iframe'); iframe.className = 'viewport'; iframe.id = id + '-view'; iframe.src = targetUrl;
+                            iframe.onload = () => { let displayTitle = targetUrl.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0]; if(displayTitle === 'about:blank' || displayTitle === '') displayTitle = 'New Tab'; tabEl.querySelector('.title').innerText = displayTitle.substring(0, 15) + (displayTitle.length > 15 ? '...' : ''); };
+                            document.getElementById('viewports').appendChild(iframe);
+                            tabs.push({ id, url: targetUrl }); switchTab(id);
+                        }
+                        function switchTab(id) {
+                            activeTabId = id; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+                            const activeTabEl = document.getElementById(id + '-el'); const activeView = document.getElementById(id + '-view');
+                            if (activeTabEl) activeTabEl.classList.add('active');
+                            if (activeView) { activeView.classList.add('active'); document.getElementById('url-bar').value = (activeView.src && activeView.src !== 'about:blank') ? activeView.src : ''; }
+                        }
+                        function closeTab(id) {
+                            const idx = tabs.findIndex(t => t.id === id);
+                            if (idx > -1) { tabs.splice(idx, 1); document.getElementById(id + '-el').remove(); document.getElementById(id + '-view').remove(); if (tabs.length === 0) createTab('about:blank'); else if (activeTabId === id) switchTab(tabs[Math.max(0, idx - 1)].id); }
+                        }
+                        document.getElementById('new-tab').onclick = () => createTab('about:blank');
+                        document.getElementById('reload-btn').onclick = () => { const view = document.getElementById(activeTabId + '-view'); if (view) view.src = view.src; };
+
+                        // --- HUB INJECTOR ---
+                        function injectCode() {
+                            let code = prompt("Hub Injector\\nPaste JavaScript to inject into the active tab:\\n(Note: Blocked by CORS on some external sites)");
+                            if (code) {
+                                try {
+                                    const activeView = document.getElementById(activeTabId + '-view');
+                                    activeView.contentWindow.eval(code);
+                                    alert('Injection successful!');
+                                } catch(e) {
+                                    alert('Injection blocked by site security (CORS).\\n\\nError: ' + e.message);
+                                }
+                            }
+                        }
+
                         document.getElementById('url-bar').addEventListener('keydown', (e) => {
                             if (e.key === 'Enter') {
-                                let val = e.target.value.trim();
-                                if (val === '') return;
-                                
-                                // If it's a search term instead of a URL
-                                if (!val.startsWith('http') && (!val.includes('.') || val.includes(' '))) {
-                                    val = 'https://www.google.com/search?q=' + encodeURIComponent(val) + '&igu=1';
-                                } else if (!val.startsWith('http')) { 
-                                    val = 'https://' + val; 
-                                }
-                                
-                                const oldView = document.getElementById('main-view');
-                                const newView = document.createElement('iframe');
-                                newView.id = 'main-view'; newView.src = val;
-                                oldView.parentNode.replaceChild(newView, oldView);
-                                e.target.blur();
+                                let val = e.target.value.trim(); if (val === '') return;
+                                if (!val.startsWith('http') && (!val.includes('.') || val.includes(' '))) val = 'https://www.google.com/search?q=' + encodeURIComponent(val) + '&igu=1';
+                                else if (!val.startsWith('http')) val = 'https://' + val;
+                                const oldView = document.getElementById(activeTabId + '-view');
+                                const newView = document.createElement('iframe'); newView.className = 'viewport active'; newView.id = activeTabId + '-view'; newView.src = val;
+                                newView.onload = () => { const tabEl = document.getElementById(activeTabId + '-el'); let displayTitle = val.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0]; if(tabEl) tabEl.querySelector('.title').innerText = displayTitle.substring(0, 15) + (displayTitle.length > 15 ? '...' : ''); };
+                                oldView.parentNode.replaceChild(newView, oldView); e.target.blur();
                             }
                         });
-                        
-                        window.addEventListener('keydown', (e) => { 
-                            if (e.key === '\`') window.location.replace('https://classroom.google.com'); 
-                        });
+                        window.addEventListener('keydown', (e) => { if (e.key === '${appSettings.panicKey}') window.location.replace('${appSettings.panicUrl}'); });
+                        createTab('${url}');
                     <\/script>
                 </body>
                 </html>
             `;
-
             let win = window.open('about:blank', '_blank');
             if (win) { win.document.open(); win.document.write(stealthHTML); win.document.close(); } 
             else { document.open(); document.write(stealthHTML); document.close(); }
         }
 
-        // --- 3. ARCADE ENGINE ---
+        // --- 5. DEV TOOLS & ARCADE ENGINE ---
         function loadGame(type) {
             const c = document.getElementById('gameViewportContainer');
             c.innerHTML = `<iframe class="sandbox" id="gameFrame"></iframe>`;
             const doc = document.getElementById('gameFrame').contentWindow.document;
             let html = "";
-
-            if (type === 'cookie') {
-                html = `<!DOCTYPE html><html><head><style>body{background:#1a1a1a;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;user-select:none;}#c{font-size:80px;cursor:pointer;background:none;border:none;margin:20px 0;}#c:active{transform:scale(0.9);}.btn{background:#333;color:#fff;border:1px solid #555;padding:10px 15px;margin:5px;border-radius:5px;cursor:pointer;width:250px;text-align:left;}.btn:hover{background:#444;}</style></head><body><h1>Cookies: <span id="count">0</span></h1><p>CPS: <span id="cps">0</span></p><button id="c" onclick="clk()">🍪</button><button class="btn" onclick="buy(0)">🖱️ Cursor (+1/s)<br><span style="color:#aaa;font-size:12px;">Cost: <span id="c1">15</span></span></button><button class="btn" onclick="buy(1)">👵 Grandma (+5/s)<br><span style="color:#aaa;font-size:12px;">Cost: <span id="c2">100</span></span></button><script>let s=JSON.parse(localStorage.getItem('gh_c'))||{c:0,cps:0,c1:15,c2:100};let c=s.c,cps=s.cps,c1=s.c1,c2=s.c2;function sv(){localStorage.setItem('gh_c',JSON.stringify({c:c,cps:cps,c1:c1,c2:c2}));}function clk(){c++;u();}function buy(t){if(t===0&&c>=c1){c-=c1;cps+=1;c1=Math.floor(c1*1.15);}if(t===1&&c>=c2){c-=c2;cps+=5;c2=Math.floor(c2*1.15);}u();sv();}function u(){document.getElementById('count').innerText=Math.floor(c);document.getElementById('cps').innerText=cps;document.getElementById('c1').innerText=c1;document.getElementById('c2').innerText=c2;}setInterval(()=>{c+=cps/10;u();},100);setInterval(sv,3000);u();<\/script></body></html>`;
-            } else if (type === 'snake') {
-                html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #555;background:#222;}</style></head><body><h3>Score: <span id="s">0</span> | Best: <span id="bs">0</span></h3><canvas id="cv" width="300" height="300"></canvas><script>const cv=document.getElementById("cv"),cx=cv.getContext("2d");let sn=[{x:10,y:10}],fd={x:5,y:5},dx=1,dy=0,s=0,bs=localStorage.getItem('gh_s')||0;document.getElementById('bs').innerText=bs;document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"&&dx===0){dx=-1;dy=0;}if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-1;}if(e.key==="ArrowRight"&&dx===0){dx=1;dy=0;}if(e.key==="ArrowDown"&&dy===0){dx=0;dy=1;}});setInterval(()=>{let h={x:sn[0].x+dx,y:sn[0].y+dy};if(h.x<0||h.x>=15||h.y<0||h.y>=15||sn.some(p=>p.x===h.x&&p.y===h.y)){if(s>bs){bs=s;localStorage.setItem('gh_s',bs);document.getElementById('bs').innerText=bs;}sn=[{x:10,y:10}];s=0;dx=1;dy=0;}sn.unshift(h);if(h.x===fd.x&&h.y===fd.y){s+=10;fd={x:Math.floor(Math.random()*15),y:Math.floor(Math.random()*15)};}else{sn.pop();}document.getElementById('s').innerText=s;cx.fillStyle="#222";cx.fillRect(0,0,300,300);cx.fillStyle="#f55";cx.fillRect(fd.x*20,fd.y*20,18,18);cx.fillStyle="#5f5";sn.forEach(p=>cx.fillRect(p.x*20,p.y*20,18,18));},100);<\/script></body></html>`;
-            } else if (type === 'pong') {
-                html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #555;background:#000;}</style></head><body><h3 id="sc">Player: 0 | CPU: 0</h3><canvas id="cv" width="400" height="250"></canvas><script>const cx=document.getElementById("cv").getContext("2d");let py=90,ay=90,bx=200,by=125,bdx=4,bdy=3,ps=0,as=0;document.addEventListener("mousemove",e=>{py=e.clientY-document.getElementById("cv").getBoundingClientRect().top-30;if(py<0)py=0;if(py>190)py=190;});setInterval(()=>{bx+=bdx;by+=bdy;if(by<0||by>240)bdy*=-1;let d=by-30;if(ay<d-4)ay+=3.5;else if(ay>d+4)ay-=3.5;if(ay<0)ay=0;if(ay>190)ay=190;if(bx<20&&by>py-10&&by<py+60){bdx*=-1;bx=20;bdy+=(Math.random()-0.5)*2;}if(bx>370&&by>ay-10&&by<ay+60){bdx*=-1;bx=370;}if(bx<0){as++;rb(-4);}if(bx>400){ps++;rb(4);}document.getElementById('sc').innerHTML='Player: '+ps+' | CPU: '+as;cx.fillStyle="#000";cx.fillRect(0,0,400,250);cx.fillStyle="#fff";cx.fillRect(10,py,10,60);cx.fillRect(380,ay,10,60);cx.fillRect(bx,by,10,10);},16);function rb(d){bx=200;by=125;bdx=d;bdy=Math.random()>0.5?3:-3;}<\/script></body></html>`;
-            } else if (type === 'breakout') {
-                html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #444;background:#222;}</style></head><body><h3>Score: <span id="s">0</span></h3><canvas id="c" width="400" height="300"></canvas><script>const cx=document.getElementById('c').getContext('2d');let px=160,bx=200,by=150,dx=3,dy=-3,sc=0,br=[];function ib(){br=[];for(let r=0;r<4;r++)for(let c=0;c<8;c++)br.push({x:c*48+10,y:r*20+30,w:44,h:15,st:1});}ib();document.addEventListener("mousemove",e=>{px=e.clientX-document.getElementById('c').getBoundingClientRect().left-40;if(px<0)px=0;if(px>320)px=320;});setInterval(()=>{cx.clearRect(0,0,400,300);bx+=dx;by+=dy;if(bx<5||bx>395)dx*=-1;if(by<5)dy*=-1;if(by>300){bx=200;by=150;dy=-3;sc=0;ib();document.getElementById('s').innerText=sc;}if(by>280&&by<290&&bx>px&&bx<px+80){dy*=-1;by=280;dx+=(bx-(px+40))*0.05;}let w=true;br.forEach(b=>{if(b.st){w=false;if(bx>b.x&&bx<b.x+b.w&&by>b.y&&by<b.y+b.h){dy*=-1;b.st=0;sc+=10;document.getElementById('s').innerText=sc;}cx.fillStyle='#58a6ff';cx.fillRect(b.x,b.y,b.w,b.h);}});if(w)ib();cx.fillStyle='#fff';cx.fillRect(px,285,80,10);cx.beginPath();cx.arc(bx,by,5,0,Math.PI*2);cx.fill();},16);<\/script></body></html>`;
-            } else if (type === 'flappy') {
-                html = `<!DOCTYPE html><html><head><style>body{background:#70c5ce;margin:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#fff;}canvas{background:#70c5ce;border-bottom:5px solid #ded895;cursor:pointer;}h3{position:absolute;top:10px;text-shadow:2px 2px #000;margin:0;}.t{position:absolute;top:40px;font-size:12px;text-shadow:1px 1px #000;}</style></head><body><h3>Score: <span id="s">0</span> | Best: <span id="bs">0</span></h3><p class="t">Click/Space to Jump</p><canvas id="c" width="300" height="400"></canvas><script>const cv=document.getElementById('c'),cx=cv.getContext('2d');let fr=0,sc=0,bs=localStorage.getItem('gh_f')||0;document.getElementById('bs').innerText=bs;const bd={x:50,y:150,w:20,h:20,g:0.2,v:0,j:4.0,d(){cx.fillStyle='#f0e13c';cx.fillRect(this.x,this.y,this.w,this.h);},u(){this.v+=this.g;this.y+=this.v;if(this.y+this.h>=cv.height)rs();}};const pp={p:[],w:40,g:130,dx:2.5,d(){cx.fillStyle='#73bf2e';for(let p of this.p){cx.fillRect(p.x,0,this.w,p.t);cx.fillRect(p.x,p.t+this.g,this.w,cv.height-p.t-this.g);}},u(){if(fr%90===0)this.p.push({x:cv.width,t:Math.random()*(cv.height/2.5)+20});for(let i=0;i<this.p.length;i++){let p=this.p[i];p.x-=this.dx;if(bd.x<p.x+this.w&&bd.x+bd.w>p.x&&(bd.y<p.t||bd.y+bd.h>p.t+this.g))rs();if(p.x===50){sc++;document.getElementById('s').innerText=sc;}if(p.x+this.w<=0){this.p.shift();i--;}}}};function rs(){if(sc>bs){bs=sc;localStorage.setItem('gh_f',bs);document.getElementById('bs').innerText=bs;}sc=0;document.getElementById('s').innerText=sc;bd.y=150;bd.v=0;pp.p=[];fr=0;}cv.addEventListener('mousedown',()=>bd.v=-bd.j);window.addEventListener('keydown',e=>{if(e.code==='Space')bd.v=-bd.j;});function l(){cx.clearRect(0,0,cv.width,cv.height);bd.d();bd.u();pp.d();pp.u();fr++;requestAnimationFrame(l);}l();<\/script></body></html>`;
-            }
-
+            
+            // --- NEW: DEV TOOLS & AI ---
+            if (type === 'ai') html = `<!DOCTYPE html><html><head><style>body{margin:0;background:#161b22;color:#c9d1d9;font-family:sans-serif;display:flex;flex-direction:column;height:100vh;} #chat{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;} .msg{padding:10px 15px;border-radius:15px;max-width:80%;word-wrap:break-word;line-height:1.4;} .user{background:#58a6ff;color:#000;align-self:flex-end;} .bot{background:#30363d;align-self:flex-start;} .inp-area{display:flex;padding:10px;background:#0d1117;} input{flex:1;padding:10px;background:#21262d;color:#fff;border:1px solid #30363d;border-radius:5px;outline:none;} button{background:#58a6ff;border:none;padding:10px 15px;border-radius:5px;margin-left:5px;cursor:pointer;font-weight:bold;color:#000;}</style></head><body><div id="chat"><div class="msg bot">Hello! I am GhostAI. I run entirely inside your browser. How can I help you customize your hub or learn about stealth features?</div></div><div class="inp-area"><input type="text" id="in" placeholder="Ask something..."><button onclick="send()">Send</button></div><script>const c=document.getElementById('chat'),i=document.getElementById('in');function send(){let v=i.value.trim();if(!v)return;i.value='';c.innerHTML+='<div class="msg user">'+v+'</div>';setTimeout(()=>reply(v),500);}function reply(msg){let m=msg.toLowerCase(),r="I am your local AI. Try asking about games, stealth, custom themes, password, code runner, or music.";if(m.includes('hello')||m.includes('hi'))r="Greetings, operator.";if(m.includes('stealth')||m.includes('hide'))r="Use the Panic Key to instantly hide. You can set it to Redirect or Active Decoy (Fake Essay). Don't forget Protocol Zero: Shift+Esc to wipe everything!";if(m.includes('game'))r="We have Cookie Idle, Snake, Flappy, Pong, Breakout, Space Shooter, and Aim Trainer!";if(m.includes('custom')||m.includes('theme')||m.includes('password'))r="Click the Settings gear icon on the top right. You can change your lock screen password, themes, and add a custom background URL there.";if(m.includes('dev')||m.includes('code')||m.includes('inject'))r="Use the Hub Injector (</>) in the stealth browser to run scripts on sites. Or use the Code Runner in the main hub to build HTML apps.";if(m.includes('music'))r="Click the Music button on the top right. It uses procedural web-audio math to make music, so it cannot be blocked by school filters!";if(m.includes('chat')||m.includes('ghostnet'))r="GhostNet uses BroadcastChannel to send messages to any other open Hub tab on your browser/device without a server.";c.innerHTML+='<div class="msg bot">'+r+'</div>';c.scrollTop=c.scrollHeight;}i.addEventListener('keydown',e=>{if(e.key==='Enter')send()});<\/script></body></html>`;
+            else if (type === 'coderunner') html = `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;flex-direction:column;height:100vh;background:#111;color:#fff;font-family:sans-serif;} .top{display:flex;padding:10px;background:#222;gap:10px;align-items:center;} button{background:#3fb950;color:#000;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;font-weight:bold;} .main{display:flex;flex:1;} textarea{flex:1;background:#1e1e1e;color:#58a6ff;border:none;border-right:2px solid #333;padding:15px;font-family:monospace;resize:none;outline:none;font-size:14px;} iframe{flex:1;border:none;background:#fff;}</style></head><body><div class="top"><button onclick="run()">▶ Run Code</button><span style="color:#aaa;font-size:13px;">Write HTML/JS/CSS below to build your own apps!</span></div><div class="main"><textarea id="code">&lt;!DOCTYPE html&gt;\n&lt;html&gt;\n&lt;body style="text-align:center; font-family:sans-serif; margin-top:50px;"&gt;\n  &lt;h1&gt;Hello World&lt;/h1&gt;\n  &lt;p&gt;Edit this code and click Run!&lt;/p&gt;\n  &lt;button onclick="alert('JS is working!')"&gt;Test JS&lt;/button&gt;\n&lt;/body&gt;\n&lt;/html&gt;</textarea><iframe id="out"></iframe></div><script>function run(){document.getElementById('out').srcdoc=document.getElementById('code').value;}run();<\/script></body></html>`;
+            else if (type === 'console') html = `<!DOCTYPE html><html><head><style>body{margin:0;background:#1e1e1e;color:#d4d4d4;font-family:monospace;height:100vh;display:flex;flex-direction:column;} #log{flex:1;overflow-y:auto;padding:15px;white-space:pre-wrap;font-size:14px;line-height:1.5;} #in{background:#333;color:#fff;border:none;padding:15px;font-family:monospace;outline:none;font-size:14px;} .err{color:#ff4757;} .cmd{color:#58a6ff;}</style></head><body><div id="log">GhostConsole v1.0. JavaScript Environment Ready.<br>>_</div><input type="text" id="in" placeholder="Enter JS code..."><script>const log=document.getElementById('log'),inp=document.getElementById('in');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){let v=inp.value;inp.value='';log.innerHTML+='<br><span class="cmd">> '+v+'</span><br>';try{let r=eval(v);log.innerHTML+=String(r).replace(/</g,'&lt;');}catch(err){log.innerHTML+='<span class="err">'+err+'</span>';}log.scrollTop=log.scrollHeight;}});<\/script></body></html>`;
+            
+            // --- EXISTING ARCADE GAMES ---
+            else if (type === 'cookie') html = `<!DOCTYPE html><html><head><style>body{background:#1a1a1a;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;user-select:none;}#c{font-size:80px;cursor:pointer;background:none;border:none;margin:20px 0;}#c:active{transform:scale(0.9);}.btn{background:#333;color:#fff;border:1px solid #555;padding:10px 15px;margin:5px;border-radius:5px;cursor:pointer;width:250px;text-align:left;}.btn:hover{background:#444;}</style></head><body><h1>Cookies: <span id="count">0</span></h1><p>CPS: <span id="cps">0</span></p><button id="c" onclick="clk()">🍪</button><button class="btn" onclick="buy(0)">🖱️ Cursor (+1/s)<br><span style="color:#aaa;font-size:12px;">Cost: <span id="c1">15</span></span></button><button class="btn" onclick="buy(1)">👵 Grandma (+5/s)<br><span style="color:#aaa;font-size:12px;">Cost: <span id="c2">100</span></span></button><script>let s=JSON.parse(localStorage.getItem('gh_c'))||{c:0,cps:0,c1:15,c2:100};let c=s.c,cps=s.cps,c1=s.c1,c2=s.c2;function sv(){localStorage.setItem('gh_c',JSON.stringify({c:c,cps:cps,c1:c1,c2:c2}));}function clk(){c++;u();}function buy(t){if(t===0&&c>=c1){c-=c1;cps+=1;c1=Math.floor(c1*1.15);}if(t===1&&c>=c2){c-=c2;cps+=5;c2=Math.floor(c2*1.15);}u();sv();}function u(){document.getElementById('count').innerText=Math.floor(c);document.getElementById('cps').innerText=cps;document.getElementById('c1').innerText=c1;document.getElementById('c2').innerText=c2;}setInterval(()=>{c+=cps/10;u();},100);setInterval(sv,3000);u();<\/script></body></html>`;
+            else if (type === 'snake') html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #555;background:#222;}</style></head><body><h3>Score: <span id="s">0</span> | Best: <span id="bs">0</span></h3><canvas id="cv" width="300" height="300"></canvas><script>const cv=document.getElementById("cv"),cx=cv.getContext("2d");let sn=[{x:10,y:10}],fd={x:5,y:5},dx=1,dy=0,s=0,bs=localStorage.getItem('gh_s')||0;document.getElementById('bs').innerText=bs;document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"&&dx===0){dx=-1;dy=0;}if(e.key==="ArrowUp"&&dy===0){dx=0;dy=-1;}if(e.key==="ArrowRight"&&dx===0){dx=1;dy=0;}if(e.key==="ArrowDown"&&dy===0){dx=0;dy=1;}});setInterval(()=>{let h={x:sn[0].x+dx,y:sn[0].y+dy};if(h.x<0||h.x>=15||h.y<0||h.y>=15||sn.some(p=>p.x===h.x&&p.y===h.y)){if(s>bs){bs=s;localStorage.setItem('gh_s',bs);document.getElementById('bs').innerText=bs;}sn=[{x:10,y:10}];s=0;dx=1;dy=0;}sn.unshift(h);if(h.x===fd.x&&h.y===fd.y){s+=10;fd={x:Math.floor(Math.random()*15),y:Math.floor(Math.random()*15)};}else{sn.pop();}document.getElementById('s').innerText=s;cx.fillStyle="#222";cx.fillRect(0,0,300,300);cx.fillStyle="#f55";cx.fillRect(fd.x*20,fd.y*20,18,18);cx.fillStyle="#5f5";sn.forEach(p=>cx.fillRect(p.x*20,p.y*20,18,18));},100);<\/script></body></html>`;
+            else if (type === 'pong') html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #555;background:#000;}</style></head><body><h3 id="sc">Player: 0 | CPU: 0</h3><canvas id="cv" width="400" height="250"></canvas><script>const cx=document.getElementById("cv").getContext("2d");let py=90,ay=90,bx=200,by=125,bdx=4,bdy=3,ps=0,as=0;document.addEventListener("mousemove",e=>{py=e.clientY-document.getElementById("cv").getBoundingClientRect().top-30;if(py<0)py=0;if(py>190)py=190;});setInterval(()=>{bx+=bdx;by+=bdy;if(by<0||by>240)bdy*=-1;let d=by-30;if(ay<d-4)ay+=3.5;else if(ay>d+4)ay-=3.5;if(ay<0)ay=0;if(ay>190)ay=190;if(bx<20&&by>py-10&&by<py+60){bdx*=-1;bx=20;bdy+=(Math.random()-0.5)*2;}if(bx>370&&by>ay-10&&by<ay+60){bdx*=-1;bx=370;}if(bx<0){as++;rb(-4);}if(bx>400){ps++;rb(4);}document.getElementById('sc').innerHTML='Player: '+ps+' | CPU: '+as;cx.fillStyle="#000";cx.fillRect(0,0,400,250);cx.fillStyle="#fff";cx.fillRect(10,py,10,60);cx.fillRect(380,ay,10,60);cx.fillRect(bx,by,10,10);},16);function rb(d){bx=200;by=125;bdx=d;bdy=Math.random()>0.5?3:-3;}<\/script></body></html>`;
+            else if (type === 'breakout') html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{border:2px solid #444;background:#222;}</style></head><body><h3>Score: <span id="s">0</span></h3><canvas id="c" width="400" height="300"></canvas><script>const cx=document.getElementById('c').getContext('2d');let px=160,bx=200,by=150,dx=3,dy=-3,sc=0,br=[];function ib(){br=[];for(let r=0;r<4;r++)for(let c=0;c<8;c++)br.push({x:c*48+10,y:r*20+30,w:44,h:15,st:1});}ib();document.addEventListener("mousemove",e=>{px=e.clientX-document.getElementById('c').getBoundingClientRect().left-40;if(px<0)px=0;if(px>320)px=320;});setInterval(()=>{cx.clearRect(0,0,400,300);bx+=dx;by+=dy;if(bx<5||bx>395)dx*=-1;if(by<5)dy*=-1;if(by>300){bx=200;by=150;dy=-3;sc=0;ib();document.getElementById('s').innerText=sc;}if(by>280&&by<290&&bx>px&&bx<px+80){dy*=-1;by=280;dx+=(bx-(px+40))*0.05;}let w=true;br.forEach(b=>{if(b.st){w=false;if(bx>b.x&&bx<b.x+b.w&&by>b.y&&by<b.y+b.h){dy*=-1;b.st=0;sc+=10;document.getElementById('s').innerText=sc;}cx.fillStyle='#58a6ff';cx.fillRect(b.x,b.y,b.w,b.h);}});if(w)ib();cx.fillStyle='#fff';cx.fillRect(px,285,80,10);cx.beginPath();cx.arc(bx,by,5,0,Math.PI*2);cx.fill();},16);<\/script></body></html>`;
+            else if (type === 'space') html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}canvas{background:#000;border:2px solid #444;box-shadow: 0 0 15px rgba(88,166,255,0.3);}</style></head><body><h3 style="margin:10px;">Score: <span id="sc">0</span></h3><canvas id="c" width="300" height="400"></canvas><script>const cx=document.getElementById('c').getContext('2d');let px=140,pb=[],eb=[],sc=0,k={};document.addEventListener('keydown',e=>{k[e.code]=1;});document.addEventListener('keyup',e=>{k[e.code]=0;});setInterval(()=>{if(Math.random()<0.05)eb.push({x:Math.random()*280,y:0});if(k.ArrowLeft&&px>0)px-=4;if(k.ArrowRight&&px<280)px+=4;if(k.Space&&pb.length<3){pb.push({x:px+8,y:370});k.Space=0;}cx.fillStyle='#000';cx.fillRect(0,0,300,400);cx.fillStyle='#58a6ff';cx.fillRect(px,380,20,20);cx.fillStyle='#ffeb3b';for(let i=0;i<pb.length;i++){pb[i].y-=6;cx.fillRect(pb[i].x,pb[i].y,4,10);if(pb[i].y<0)pb.splice(i--,1);}cx.fillStyle='#ff4757';for(let i=0;i<eb.length;i++){eb[i].y+=2;cx.fillRect(eb[i].x,eb[i].y,20,20);if(eb[i].y>400)eb.splice(i--,1);else{for(let j=0;j<pb.length;j++){if(pb[j].x>eb[i].x-4&&pb[j].x<eb[i].x+20&&pb[j].y<eb[i].y+20){eb.splice(i--,1);pb.splice(j--,1);sc+=10;document.getElementById('sc').innerText=sc;break;}}}}cx.fillStyle='#fff';for(let i=0;i<30;i++)cx.fillRect(Math.random()*300,Math.random()*400,1,1);},16);<\/script></body></html>`;
+            else if (type === 'aim') html = `<!DOCTYPE html><html><head><style>body{background:#111;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;cursor:crosshair;}canvas{background:#222;border:2px solid #444;border-radius:10px;box-shadow: 0 0 15px rgba(255,71,87,0.3);}</style></head><body><h3 style="margin:10px 0;">Score: <span id="sc">0</span> | Time: <span id="tm">30</span></h3><canvas id="c" width="400" height="300"></canvas><script>const cx=document.getElementById('c').getContext('2d'),cv=document.getElementById('c');let sc=0,tm=30,tx,ty,r=15,st=0;function sp(){tx=Math.random()*(400-r*2)+r;ty=Math.random()*(300-r*2)+r;dr();}function dr(){cx.clearRect(0,0,400,300);cx.fillStyle='#ff4757';cx.beginPath();cx.arc(tx,ty,r,0,Math.PI*2);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(tx,ty,r-5,0,Math.PI*2);cx.fill();cx.fillStyle='#ff4757';cx.beginPath();cx.arc(tx,ty,r-10,0,Math.PI*2);cx.fill();}cv.addEventListener('mousedown',e=>{if(!st)st=setInterval(()=>{tm--;document.getElementById('tm').innerText=tm;if(tm<=0){clearInterval(st);alert('Time Up! Score: '+sc);sc=0;tm=30;st=0;}},1000);let dx=e.offsetX-tx,dy=e.offsetY-ty;if(Math.sqrt(dx*dx+dy*dy)<r){sc++;document.getElementById('sc').innerText=sc;sp();}});sp();<\/script></body></html>`;
+            else if (type === 'flappy') html = `<!DOCTYPE html><html><head><style>body{background:#70c5ce;margin:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#fff;}canvas{background:#70c5ce;border-bottom:5px solid #ded895;cursor:pointer;}h3{position:absolute;top:10px;text-shadow:2px 2px #000;margin:0;}.t{position:absolute;top:40px;font-size:12px;text-shadow:1px 1px #000;}</style></head><body><h3>Score: <span id="s">0</span> | Best: <span id="bs">0</span></h3><p class="t">Click/Space to Jump</p><canvas id="c" width="300" height="400"></canvas><script>const cv=document.getElementById('c'),cx=cv.getContext('2d');let fr=0,sc=0,bs=localStorage.getItem('gh_f')||0;document.getElementById('bs').innerText=bs;const bd={x:50,y:150,w:20,h:20,g:0.2,v:0,j:4.0,d(){cx.fillStyle='#f0e13c';cx.fillRect(this.x,this.y,this.w,this.h);},u(){this.v+=this.g;this.y+=this.v;if(this.y+this.h>=cv.height)rs();}};const pp={p:[],w:40,g:130,dx:2.5,d(){cx.fillStyle='#73bf2e';for(let p of this.p){cx.fillRect(p.x,0,this.w,p.t);cx.fillRect(p.x,p.t+this.g,this.w,cv.height-p.t-this.g);}},u(){if(fr%90===0)this.p.push({x:cv.width,t:Math.random()*(cv.height/2.5)+20});for(let i=0;i<this.p.length;i++){let p=this.p[i];p.x-=this.dx;if(bd.x<p.x+this.w&&bd.x+bd.w>p.x&&(bd.y<p.t||bd.y+bd.h>p.t+this.g))rs();if(p.x===50){sc++;document.getElementById('s').innerText=sc;}if(p.x+this.w<=0){this.p.shift();i--;}}}};function rs(){if(sc>bs){bs=sc;localStorage.setItem('gh_f',bs);document.getElementById('bs').innerText=bs;}sc=0;document.getElementById('s').innerText=sc;bd.y=150;bd.v=0;pp.p=[];fr=0;}cv.addEventListener('mousedown',()=>bd.v=-bd.j);window.addEventListener('keydown',e=>{if(e.code==='Space')bd.v=-bd.j;});function l(){cx.clearRect(0,0,cv.width,cv.height);bd.d();bd.u();pp.d();pp.u();fr++;requestAnimationFrame(l);}l();<\/script></body></html>`;
+            
             doc.open(); doc.write(html); doc.close();
         }
     </script>
